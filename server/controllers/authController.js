@@ -1,12 +1,22 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// Generate JWT Token
+const generateToken = (userId) => {
+  return jwt.sign(
+    { userId }, 
+    process.env.JWT_SECRET || 'your-secret-key', 
+    { expiresIn: '7d' }
+  );
+};
 
 // Register new user
 const registerUser = async (req, res) => {
   try {
     console.log('1. Controller received registration data:', req.body);
     
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     
     // Check if user already exists
     console.log('2. Checking if user exists...');
@@ -25,16 +35,22 @@ const registerUser = async (req, res) => {
     const user = new User({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: role || 'tenant' // Use provided role or default to tenant
     });
     
     // Save to MongoDB
     await user.save();
     console.log('6. User saved to MongoDB:', user._id);
     
+    // Generate JWT token
+    const token = generateToken(user._id);
+    console.log('7. JWT token generated');
+    
     // Send success response (without password)
     res.status(201).json({
       message: 'User registered successfully',
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -42,7 +58,7 @@ const registerUser = async (req, res) => {
         role: user.role
       }
     });
-    console.log('7. Success response sent to frontend');
+    console.log('8. Success response sent to frontend');
     
   } catch (error) {
     console.error('Error in registerUser:', error);
@@ -75,9 +91,14 @@ const loginUser = async (req, res) => {
     
     console.log('6. Login successful!');
     
+    // Generate JWT token
+    const token = generateToken(user._id);
+    console.log('7. JWT token generated');
+    
     // Send success response (without password)
     res.json({
       message: 'Login successful',
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -85,7 +106,7 @@ const loginUser = async (req, res) => {
         role: user.role
       }
     });
-    console.log('7. Login response sent to frontend');
+    console.log('8. Login response sent to frontend');
     
   } catch (error) {
     console.error('Error in loginUser:', error);
