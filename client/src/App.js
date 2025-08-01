@@ -1,25 +1,38 @@
 //main react app component (rendered in root)
-import logo from './logo.svg';
+import React from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AuthPage from './components/AuthPage';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
+// Main app content (inside AuthProvider)
+const AppContent = () => {
+  const { isAuthenticated, loading } = useAuth();
+
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">
+          <h2>Loading Residex...</h2>
+          <p>Please wait while we check your authentication status</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show dashboard if authenticated, otherwise show auth page
+  return isAuthenticated ? <Dashboard /> : <AuthPage />;
+};
+
+// Root App component
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <div className="App">
+        <AppContent />
+      </div>
+    </AuthProvider>
   );
 }
 
