@@ -1,3 +1,4 @@
+//registration form
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
@@ -7,12 +8,9 @@ const Register = ({ onSwitchToLogin }) => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'tenant'
+    confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const { register, loading, error, clearError } = useAuth();
 
   // Handle input changes
@@ -60,8 +58,10 @@ const Register = ({ onSwitchToLogin }) => {
     try {
       // Send registration data (excluding confirmPassword)
       const { confirmPassword, ...registrationData } = formData;
+      
+      console.log('Sending registration request');
       await register(registrationData);
-      console.log('Registration successful, user will be redirected');
+      console.log('Registration successful');
     } catch (error) {
       console.error('Registration failed:', error.message);
       // Error is handled by context
@@ -75,105 +75,63 @@ const Register = ({ onSwitchToLogin }) => {
       <div className="auth-card">
         <div className="auth-header">
           <h2>Create Account</h2>
-          <p>Join Residex to manage your property</p>
+          <p>Join Residex Building Management</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
             <input
               type="text"
-              id="name"
               name="name"
+              placeholder="Full Name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your full name"
-              required
               disabled={loading}
+              required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
             <input
               type="email"
-              id="email"
               name="email"
+              placeholder="Email Address"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
-              required
               disabled={loading}
+              required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="role">Account Type</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
+            <input
+              type="password"
+              name="password"
+              placeholder="Password (min 6 characters)"
+              value={formData.password}
               onChange={handleChange}
               disabled={loading}
-            >
-              <option value="tenant">Tenant</option>
-              <option value="landlord">Landlord</option>
-              <option value="admin">Property Manager (Syndic)</option>
-            </select>
+              required
+            />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create a password (min 6 characters)"
-                required
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-              >
-                {showPassword ? '🙈' : '👁️'}
-              </button>
-            </div>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              disabled={loading}
+              required
+            />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <div className="password-input">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                required
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                disabled={loading}
-              >
-                {showConfirmPassword ? '🙈' : '👁️'}
-              </button>
-            </div>
+          <div className="info-message">
+            <p>New accounts are created as tenants by default.</p>
+            <p>Building administrator will assign your proper role.</p>
           </div>
 
           <button 
@@ -184,26 +142,18 @@ const Register = ({ onSwitchToLogin }) => {
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
 
-          {validationError && !loading && (
-            <div className="validation-message">
-              {validationError}
-            </div>
-          )}
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Already have an account?{' '}
+          <div className="auth-switch">
+            <p>Already have an account?</p>
             <button 
-              type="button"
-              className="link-button"
+              type="button" 
               onClick={onSwitchToLogin}
+              className="switch-button"
               disabled={loading}
             >
               Sign In
             </button>
-          </p>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

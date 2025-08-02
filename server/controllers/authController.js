@@ -14,54 +14,48 @@ const generateToken = (userId) => {
 // Register new user
 const registerUser = async (req, res) => {
   try {
-    console.log('1. Controller received registration data:', req.body);
+    const { name, email, password } = req.body;
     
-    const { name, email, password, role } = req.body;
-    
-    // Check if user already exists
-    console.log('2. Checking if user exists...');
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      console.log('3. User already exists!');
-      return res.status(400).json({ error: 'User already exists' });
+    console.log('Registration request received for:', email);
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Please provide all required fields' });
     }
     
-    // Hash password for security
-    console.log('4. Hashing password...');
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists with this email' });
+    }
+    
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create new user
-    console.log('5. Creating user in database...');
     const user = new User({
       name,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
-      role: role || 'tenant' // Use provided role or default to tenant
+      role: 'tenant'
     });
-    
-    // Save to MongoDB
+
     await user.save();
-    console.log('6. User saved to MongoDB:', user._id);
-    
-    // Generate JWT token
+    console.log('User created with ID:', user._id);
+
     const token = generateToken(user._id);
-    console.log('7. JWT token generated');
+
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
     
-    // Send success response (without password)
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: userData
     });
-    console.log('8. Success response sent to frontend');
-    
+
   } catch (error) {
-    console.error('Error in registerUser:', error);
+    console.error('Registration error:', error);
     res.status(500).json({ error: 'Server error during registration' });
   }
 };

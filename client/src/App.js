@@ -21,13 +21,13 @@ const AppContent = () => {
     );
   }
 
-  // Show dashboard if authenticated, otherwise show auth page
+  // Show dashboard if authenticated, otherwise show auth page (either login or register)
   return isAuthenticated ? <Dashboard /> : <AuthPage />;
 };
 
 // Root App component
 function App() {
-  return (
+  return ( //wrap everything in global mem (auth context)
     <AuthProvider>
       <div className="App">
         <AppContent />

@@ -1,3 +1,4 @@
+//global mem to track who's logged in 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 
