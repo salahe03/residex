@@ -5,6 +5,7 @@ require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const residentRoutes = require('./routes/residents'); // Add this line
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,7 @@ app.use(express.json()); //converts incoming json playloads to js objects
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/residents', residentRoutes); // Add this line
 
 // Basic route
 app.get('/', (req, res) => {
