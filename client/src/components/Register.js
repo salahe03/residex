@@ -61,6 +61,11 @@ const Register = ({ onSwitchToLogin }) => {
     // Validate form
     const validationError = validateForm();
     if (validationError) {
+      // Scroll to the validation error
+      window.scrollTo({ 
+        top: document.querySelector('.validation-error').offsetTop - 100, 
+        behavior: 'smooth' 
+      });
       return;
     }
 
@@ -143,7 +148,7 @@ const Register = ({ onSwitchToLogin }) => {
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+            <label htmlFor="name">Full Name <span className="required-field">*</span></label>
             <input
               type="text"
               id="name"
@@ -157,7 +162,7 @@ const Register = ({ onSwitchToLogin }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Email Address <span className="required-field">*</span></label>
             <input
               type="email"
               id="email"
@@ -172,7 +177,7 @@ const Register = ({ onSwitchToLogin }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="phone">Phone Number</label>
+              <label htmlFor="phone">Phone Number <span className="required-field">*</span></label>
               <input
                 type="tel"
                 id="phone"
@@ -186,7 +191,7 @@ const Register = ({ onSwitchToLogin }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="apartmentNumber">Apartment Number</label>
+              <label htmlFor="apartmentNumber">Apartment Number <span className="required-field">*</span></label>
               <input
                 type="text"
                 id="apartmentNumber"
@@ -215,7 +220,7 @@ const Register = ({ onSwitchToLogin }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Password <span className="required-field">*</span></label>
             <input
               type="password"
               id="password"
@@ -229,7 +234,7 @@ const Register = ({ onSwitchToLogin }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+            <label htmlFor="confirmPassword">Confirm Password <span className="required-field">*</span></label>
             <input
               type="password"
               id="confirmPassword"
