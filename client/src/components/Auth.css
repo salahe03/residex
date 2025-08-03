@@ -198,6 +198,21 @@
   margin-top: 10px;
 }
 
+.info-message {
+  background: #e8f4f8;
+  border: 1px solid #b8e0d2;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: #2c5530;
+}
+
+.info-message p {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
 /* Responsive design */
 @media (max-width: 480px) {
   .auth-container {
