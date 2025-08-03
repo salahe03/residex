@@ -1,6 +1,7 @@
 //global mem to track who's logged in 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { useToast } from './ToastContext'; // Add this import
 
 // Define API base URL
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -22,18 +23,36 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  const { showError, showSuccess, showWarning } = useToast(); // Add this
 
   // Computed authentication state
   const isAuthenticated = !!user;
 
   // Check for existing user on app startup
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
-    setLoading(false);
+    const checkAuth = async () => {
+      try {
+        const savedUser = authService.getCurrentUser();
+        const token = authService.getToken();
+        
+        if (savedUser && token) {
+          setUser(savedUser);
+          console.log('User restored from localStorage:', savedUser.email);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        authService.logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
+
+  // Clear error function
+  const clearError = () => setError('');
 
   // Register function
   const register = async (userData) => {
@@ -59,16 +78,13 @@ export const AuthProvider = ({ children }) => {
 
       // Handle successful registration
       if (data.requiresApproval) {
-        // Show success message for pending approval
-        setError(''); // Clear any errors
+        setError('');
         console.log('Registration successful, pending approval');
         
-        // Show success message
-        alert('✅ Registration successful!\n\nYour account is pending admin approval. The building administrator will review your application and activate your account. You will be notified once approved.');
+        showSuccess('Registration successful! Your account is pending admin approval. You will be notified once approved.');
         
         return { success: true, requiresApproval: true, user: data.user };
       } else {
-        // Admin account - log them in immediately
         console.log('Admin registration - logging in immediately');
         localStorage.setItem('token', data.token);
         setUser(data.user);
@@ -85,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login function
+  // Updated Login function with toast handling
   const login = async (credentials) => {
     try {
       setLoading(true);
@@ -101,7 +117,20 @@ export const AuthProvider = ({ children }) => {
       return response;
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message);
+      
+      // Handle specific inactive account error
+      if (error.message.includes('pending admin approval') || error.message.includes('pending approval')) {
+        // Clear form error and show toast instead
+        setError('');
+        showWarning(
+          'Account pending approval. Please contact the building administrator to activate your account.',
+          6000
+        );
+      } else {
+        // For other errors, set the form error as usual
+        setError(error.message);
+      }
+      
       throw error;
     } finally {
       setLoading(false);
@@ -116,22 +145,20 @@ export const AuthProvider = ({ children }) => {
     setError('');
   };
 
-  // Clear error function
-  const clearError = () => {
-    setError('');
-  };
+  // Check if user is admin
+  const isAdmin = user && user.role === 'admin';
 
   // Context value object
   const value = {
     user,
+    login,
+    register,
+    logout,
     loading,
     error,
-    register,
-    login,
-    logout,
     clearError,
+    isAdmin,
     isAuthenticated,
-    isAdmin: user?.role === 'admin',
     isSyndic: user?.role === 'admin', // In your system, admin = syndic
   };
 

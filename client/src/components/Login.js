@@ -40,7 +40,7 @@ const Login = ({ onSwitchToRegister }) => {
       console.log('Login successful, user will be redirected');
     } catch (error) {
       console.error('Login failed:', error.message);
-      // Error is handled by context
+      // Error handling is now done in AuthContext with toasts
     }
   };
 
@@ -53,7 +53,8 @@ const Login = ({ onSwitchToRegister }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
+          {/* Only show error for non-inactive account errors */}
+          {error && !error.includes('pending') && (
             <div className="error-message">
               {error}
             </div>
