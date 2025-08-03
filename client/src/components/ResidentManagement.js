@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback import
 import { residentService } from '../services/residentService';
 import { userService } from '../services/userService';
 import AddResident from './AddResident';
@@ -33,12 +33,8 @@ const ResidentManagement = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
 
-  // Load data on initial render and tab change
-  useEffect(() => {
-    loadData();
-  }, [activeTab]);
-
-  const loadData = async () => {
+  // Memoize the loadData function with useCallback
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
     
@@ -66,7 +62,12 @@ const ResidentManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]); // Include activeTab as dependency
+  
+  // Updated useEffect with proper dependencies
+  useEffect(() => {
+    loadData();
+  }, [loadData]); // Now loadData is the only dependency
 
   // =====================
   // RESIDENTS FUNCTIONS
