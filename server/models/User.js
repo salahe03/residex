@@ -33,8 +33,7 @@ const userSchema = new mongoose.Schema({
   apartmentNumber: {
     type: String,
     required: function() { return this.role !== 'admin'; },
-    uppercase: true,
-    sparse: true // Allows nulls but enforces uniqueness when present
+    uppercase: true
   },
   monthlyCharge: {
     type: Number,
@@ -50,7 +49,9 @@ const userSchema = new mongoose.Schema({
   // Account approval system
   isActive: {
     type: Boolean,
-    default: false // All new accounts need approval
+    default: function() { 
+      return this.role === 'admin' ? true : false; 
+    }
   },
   approvedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -59,7 +60,9 @@ const userSchema = new mongoose.Schema({
   },
   approvedAt: {
     type: Date,
-    default: null
+    default: function() {
+      return this.role === 'admin' ? new Date() : null;
+    }
   },
   rejectedAt: {
     type: Date,
@@ -69,7 +72,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index to ensure unique apartment numbers
+// This is the proper way to define the index
 userSchema.index(
   { apartmentNumber: 1 }, 
   { 
