@@ -10,12 +10,12 @@ const getAuthHeaders = () => {
 };
 
 export const residentService = {
-  // Get all residents
+  // Get all active residents (users who are not admins)
   getAllResidents: async () => {
     try {
-      console.log('🏠 Fetching all residents...');
+      console.log('Fetching all residents...');
       
-      const response = await fetch(`${API_BASE_URL}/residents`, {
+      const response = await fetch(`${API_BASE_URL}/users/residents`, {
         method: 'GET',
         headers: getAuthHeaders(),
       });
@@ -26,69 +26,72 @@ export const residentService = {
         throw new Error(data.error || 'Failed to fetch residents');
       }
       
-      console.log('✅ Residents fetched:', data.count);
+      console.log('Residents fetched:', data.count);
       return data;
     } catch (error) {
-      console.error('❌ Error fetching residents:', error);
+      console.error('Error fetching residents:', error);
       throw error;
     }
   },
 
-  // Create new resident
+  // Create new resident (actually creates a user and activates them)
   createResident: async (residentData) => {
     try {
-      console.log('🏠 Creating new resident:', residentData);
+      console.log('Creating new resident:', residentData);
       
-      const response = await fetch(`${API_BASE_URL}/residents`, {
+      // Step 1: Create user account
+      const userResponse = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(residentData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: residentData.name,
+          email: residentData.email,
+          password: `Temp${Math.random().toString(36).slice(-8)}!`, // Random password
+          phone: residentData.phone,
+          apartmentNumber: residentData.apartmentNumber,
+          role: 'tenant'
+        }),
       });
 
-      const data = await response.json();
+      const userData = await userResponse.json();
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create resident');
+      if (!userResponse.ok) {
+        throw new Error(userData.error || 'Failed to create user account');
+      }
+
+      // Step 2: Immediately approve the user (admin is creating them)
+      const approvalResponse = await fetch(`${API_BASE_URL}/users/${userData.user.id}/approve`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          monthlyCharge: residentData.monthlyCharge,
+          apartmentNumber: residentData.apartmentNumber,
+          status: residentData.status
+        }),
+      });
+
+      const approvalData = await approvalResponse.json();
+      
+      if (!approvalResponse.ok) {
+        throw new Error(approvalData.error || 'Failed to approve user');
       }
       
-      console.log('✅ Resident created:', data.data.name);
-      return data;
+      console.log('Resident created and approved successfully');
+      return approvalData;
     } catch (error) {
-      console.error('❌ Error creating resident:', error);
+      console.error('Error creating resident:', error);
       throw error;
     }
   },
 
-  // Get single resident by ID
-  getResidentById: async (id) => {
+  // Update resident (actually updates user)
+  updateResident: async (residentId, residentData) => {
     try {
-      console.log('🏠 Fetching resident by ID:', id);
+      console.log('Updating resident:', residentId, residentData);
       
-      const response = await fetch(`${API_BASE_URL}/residents/${id}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch resident');
-      }
-      
-      console.log('✅ Resident fetched:', data.data.name);
-      return data;
-    } catch (error) {
-      console.error('❌ Error fetching resident:', error);
-      throw error;
-    }
-  },
-
-  // Update resident
-  updateResident: async (id, residentData) => {
-    try {
-      console.log('🏠 Updating resident:', id, residentData);
-      
-      const response = await fetch(`${API_BASE_URL}/residents/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${residentId}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(residentData),
@@ -100,20 +103,20 @@ export const residentService = {
         throw new Error(data.error || 'Failed to update resident');
       }
       
-      console.log('✅ Resident updated:', data.data.name);
+      console.log('Resident updated successfully');
       return data;
     } catch (error) {
-      console.error('❌ Error updating resident:', error);
+      console.error('Error updating resident:', error);
       throw error;
     }
   },
 
-  // Delete resident
-  deleteResident: async (id) => {
+  // Delete resident (actually deletes user)
+  deleteResident: async (residentId) => {
     try {
-      console.log('🏠 Deleting resident:', id);
+      console.log('Deleting resident:', residentId);
       
-      const response = await fetch(`${API_BASE_URL}/residents/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${residentId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
@@ -124,10 +127,10 @@ export const residentService = {
         throw new Error(data.error || 'Failed to delete resident');
       }
       
-      console.log('✅ Resident deleted');
+      console.log('Resident deleted successfully');
       return data;
     } catch (error) {
-      console.error('❌ Error deleting resident:', error);
+      console.error('Error deleting resident:', error);
       throw error;
     }
   },
@@ -135,9 +138,9 @@ export const residentService = {
   // Get resident statistics
   getResidentStats: async () => {
     try {
-      console.log('📊 Fetching resident statistics...');
+      console.log('Fetching resident statistics...');
       
-      const response = await fetch(`${API_BASE_URL}/residents/stats`, {
+      const response = await fetch(`${API_BASE_URL}/users/stats`, {
         method: 'GET',
         headers: getAuthHeaders(),
       });
@@ -148,10 +151,10 @@ export const residentService = {
         throw new Error(data.error || 'Failed to fetch statistics');
       }
       
-      console.log('✅ Statistics fetched:', data.data);
+      console.log('Resident statistics fetched');
       return data;
     } catch (error) {
-      console.error('❌ Error fetching statistics:', error);
+      console.error('Error fetching resident statistics:', error);
       throw error;
     }
   }

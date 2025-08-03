@@ -22,7 +22,7 @@ const EditResident = ({ resident, onSuccess, onCancel }) => {
         phone: resident.phone || '',
         apartmentNumber: resident.apartmentNumber || '',
         status: resident.status || 'tenant',
-        monthlyCharge: resident.monthlyCharge?.toString() || ''
+        monthlyCharge: resident.monthlyCharge || ''
       });
     }
   }, [resident]);
@@ -33,46 +33,28 @@ const EditResident = ({ resident, onSuccess, onCancel }) => {
       ...prev,
       [name]: value
     }));
-    
-    if (error) setError('');
-  };
-
-  const validateForm = () => {
-    if (!formData.name.trim()) return 'Name is required';
-    if (!formData.email.trim()) return 'Email is required';
-    if (!formData.phone.trim()) return 'Phone is required';
-    if (!formData.apartmentNumber.trim()) return 'Apartment number is required';
-    if (!formData.monthlyCharge || formData.monthlyCharge < 0) return 'Valid monthly charge is required';
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) return 'Valid email is required';
-    
-    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     try {
       setLoading(true);
       setError('');
       
-      const updateData = {
+      // Convert monthlyCharge to number
+      const residentData = {
         ...formData,
-        monthlyCharge: Number(formData.monthlyCharge),
-        apartmentNumber: formData.apartmentNumber.toUpperCase()
+        monthlyCharge: formData.monthlyCharge ? parseFloat(formData.monthlyCharge) : 0
       };
       
-      await residentService.updateResident(resident._id, updateData);
-      onSuccess?.();
+      await residentService.updateResident(resident._id, residentData);
+      
+      console.log('Resident updated successfully');
+      onSuccess(); // Navigate back to resident list
       
     } catch (error) {
+      console.error('Error updating resident:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -80,7 +62,15 @@ const EditResident = ({ resident, onSuccess, onCancel }) => {
   };
 
   if (!resident) {
-    return null;
+    return (
+      <div className="resident-form-overlay">
+        <div className="resident-form-container">
+          <div className="loading-message">
+            <h3>Loading resident data...</h3>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -195,6 +185,9 @@ const EditResident = ({ resident, onSuccess, onCancel }) => {
           <div className="resident-info">
             <p><strong>Created:</strong> {new Date(resident.createdAt).toLocaleDateString()}</p>
             <p><strong>Last Updated:</strong> {new Date(resident.updatedAt).toLocaleDateString()}</p>
+            {resident.approvedBy && (
+              <p><strong>Approved by:</strong> {resident.approvedBy.name}</p>
+            )}
           </div>
 
           <div className="form-actions">

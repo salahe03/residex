@@ -59,6 +59,8 @@
 }
 
 .form-group label {
+  display: block;
+  margin-bottom: 6px;
   font-weight: 500;
   color: #333;
   font-size: 14px;
@@ -72,6 +74,10 @@
   font-size: 16px;
   transition: border-color 0.2s, box-shadow 0.2s;
   background: white;
+}
+
+.form-group select {
+  width: 100%;
 }
 
 .form-group input:focus,
@@ -199,18 +205,82 @@
 }
 
 .info-message {
-  background: #e8f4f8;
-  border: 1px solid #b8e0d2;
-  border-radius: 6px;
-  padding: 12px;
-  margin: 16px 0;
-  font-size: 14px;
-  color: #2c5530;
+  background-color: #e8f4fd;
+  color: #1976d2;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #bbdefb;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .info-message p {
   margin: 4px 0;
-  line-height: 1.4;
+  font-size: 14px;
+}
+
+.info-message p:first-child {
+  font-weight: 600;
+}
+
+.success-message {
+  text-align: center;
+  padding: 20px;
+}
+
+.success-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.success-message h3 {
+  color: #2e7d32;
+  margin: 0 0 16px 0;
+  font-size: 24px;
+}
+
+.success-message p {
+  color: #666;
+  margin: 0 0 24px 0;
+  font-size: 16px;
+}
+
+.next-steps {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.next-steps h4 {
+  color: #333;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+}
+
+.next-steps ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.next-steps li {
+  color: #666;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.contact-info {
+  background: #e3f2fd;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 16px 0;
+}
+
+.contact-info p {
+  margin: 0;
+  color: #1976d2;
+  font-size: 14px;
 }
 
 /* Responsive design */
@@ -225,5 +295,12 @@
   
   .auth-header h2 {
     font-size: 24px;
+  }
+}
+
+/* Responsive design for form rows */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }

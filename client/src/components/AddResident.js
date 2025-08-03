@@ -20,46 +20,28 @@ const AddResident = ({ onSuccess, onCancel }) => {
       ...prev,
       [name]: value
     }));
-    
-    if (error) setError('');
-  };
-
-  const validateForm = () => {
-    if (!formData.name.trim()) return 'Name is required';
-    if (!formData.email.trim()) return 'Email is required';
-    if (!formData.phone.trim()) return 'Phone is required';
-    if (!formData.apartmentNumber.trim()) return 'Apartment number is required';
-    if (!formData.monthlyCharge || formData.monthlyCharge < 0) return 'Valid monthly charge is required';
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) return 'Valid email is required';
-    
-    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     try {
       setLoading(true);
       setError('');
       
+      // Convert monthlyCharge to number
       const residentData = {
         ...formData,
-        monthlyCharge: Number(formData.monthlyCharge),
-        apartmentNumber: formData.apartmentNumber.toUpperCase()
+        monthlyCharge: formData.monthlyCharge ? parseFloat(formData.monthlyCharge) : 0
       };
       
       await residentService.createResident(residentData);
-      onSuccess?.();
+      
+      console.log('Resident created successfully');
+      onSuccess(); // Navigate back to resident list
       
     } catch (error) {
+      console.error('Error creating resident:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -175,6 +157,10 @@ const AddResident = ({ onSuccess, onCancel }) => {
             </div>
           </div>
 
+          <div className="form-note">
+            <p><strong>Note:</strong> A user account will be created automatically with a temporary password. The resident will need to contact you to reset their password.</p>
+          </div>
+
           <div className="form-actions">
             <button 
               type="button" 
@@ -189,7 +175,7 @@ const AddResident = ({ onSuccess, onCancel }) => {
               className="submit-btn"
               disabled={loading}
             >
-              {loading ? 'Adding Resident...' : 'Add Resident'}
+              {loading ? 'Creating Resident...' : 'Add Resident'}
             </button>
           </div>
         </form>

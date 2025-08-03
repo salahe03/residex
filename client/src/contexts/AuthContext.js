@@ -2,6 +2,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 
+// Define API base URL
+const API_BASE_URL = 'http://localhost:5000/api';
+
 // Create the authentication context
 const AuthContext = createContext();
 
@@ -20,6 +23,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Computed authentication state
+  const isAuthenticated = !!user;
+
   // Check for existing user on app startup
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -34,12 +40,44 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError('');
-      
-      const response = await authService.register(userData);
-      setUser(response.user);
-      
-      return response;
+
+      console.log('Registering user with data:', userData);
+
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Handle successful registration
+      if (data.requiresApproval) {
+        // Show success message for pending approval
+        setError(''); // Clear any errors
+        console.log('Registration successful, pending approval');
+        
+        // Show success message
+        alert('✅ Registration successful!\n\nYour account is pending admin approval. The building administrator will review your application and activate your account. You will be notified once approved.');
+        
+        return { success: true, requiresApproval: true, user: data.user };
+      } else {
+        // Admin account - log them in immediately
+        console.log('Admin registration - logging in immediately');
+        localStorage.setItem('token', data.token);
+        setUser(data.user);
+        
+        return { success: true, requiresApproval: false, user: data.user };
+      }
+
     } catch (error) {
+      console.error('Registration error:', error);
       setError(error.message);
       throw error;
     } finally {
@@ -53,11 +91,16 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError('');
       
+      console.log('Attempting login with:', credentials.email);
+      
       const response = await authService.login(credentials);
+      
+      console.log('Login successful, setting user:', response.user);
       setUser(response.user);
       
       return response;
     } catch (error) {
+      console.error('Login error:', error);
       setError(error.message);
       throw error;
     } finally {
@@ -67,8 +110,14 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = () => {
+    console.log('Logging out user');
     authService.logout();
     setUser(null);
+    setError('');
+  };
+
+  // Clear error function
+  const clearError = () => {
     setError('');
   };
 
@@ -80,10 +129,10 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     logout,
-    isAuthenticated: !!user,
+    clearError,
+    isAuthenticated,
     isAdmin: user?.role === 'admin',
     isSyndic: user?.role === 'admin', // In your system, admin = syndic
-    clearError: () => setError('')
   };
 
   return (

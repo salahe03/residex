@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { residentService } from '../services/residentService';
-import { useAuth } from '../contexts/AuthContext';
 import './ResidentList.css';
 
 const ResidentList = ({ onAddResident, onEditResident }) => {
   const [residents, setResidents] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [stats, setStats] = useState(null);
+  const [deletingResident, setDeletingResident] = useState(null);
 
-  const { user } = useAuth();
-
-  // Load residents when component mounts
   useEffect(() => {
     loadResidents();
     loadStats();
@@ -45,11 +42,12 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
   };
 
   const handleDeleteResident = async (residentId, residentName) => {
-    if (!window.confirm(`Are you sure you want to delete ${residentName}?`)) {
+    if (!window.confirm(`Delete resident ${residentName}? This action cannot be undone.`)) {
       return;
     }
 
     try {
+      setDeletingResident(residentId);
       await residentService.deleteResident(residentId);
       
       // Refresh the list
@@ -60,16 +58,20 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
     } catch (error) {
       console.error('Error deleting resident:', error);
       setError(error.message);
+    } finally {
+      setDeletingResident(null);
     }
   };
 
   // Filter residents based on search and status
   const filteredResidents = residents.filter(resident => {
     const matchesSearch = resident.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resident.apartmentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resident.email.toLowerCase().includes(searchTerm.toLowerCase());
+                         resident.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (resident.apartmentNumber && resident.apartmentNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = filterStatus === 'all' || resident.status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'tenant' && resident.status === 'tenant') ||
+                         (filterStatus === 'owner' && resident.status === 'owner');
     
     return matchesSearch && matchesStatus;
   });
@@ -88,16 +90,16 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
   return (
     <div className="resident-list-container">
       {/* Header with stats */}
-      <div className="resident-header">
+      <div className="resident-header">  {/* CHANGED FROM: resident-list-header */}
         <div className="header-title">
-          <h2>👥 Resident Management</h2>
-          <p>Manage all building residents and their information</p>
+          <h2>🏠 Resident Management</h2>
+          <p>Manage building residents and their information</p>
         </div>
         
         {stats && (
           <div className="resident-stats">
             <div className="stat-card">
-              <span className="stat-number">{stats.totalResidents}</span>
+              <span className="stat-number">{stats.activeUsers - stats.totalAdmins}</span>
               <span className="stat-label">Total Residents</span>
             </div>
             <div className="stat-card">
@@ -109,8 +111,8 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
               <span className="stat-label">Tenants</span>
             </div>
             <div className="stat-card">
-              <span className="stat-number">{stats.totalMonthlyCharges} MAD</span>
-              <span className="stat-label">Monthly Revenue</span>
+              <span className="stat-number">{Math.round(stats.averageMonthlyCharge || 0)} MAD</span>
+              <span className="stat-label">Avg. Monthly Charge</span>
             </div>
           </div>
         )}
@@ -121,7 +123,7 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
         <div className="search-filters">
           <input
             type="text"
-            placeholder="🔍 Search by name, apartment, or email..."
+            placeholder="🔍 Search by name, email, or apartment..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -138,11 +140,8 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
           </select>
         </div>
         
-        <button 
-          onClick={onAddResident}
-          className="add-resident-btn"
-        >
-          ➕ Add New Resident
+        <button onClick={onAddResident} className="add-resident-btn">
+          + Add New Resident
         </button>
       </div>
 
@@ -163,39 +162,50 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
               : 'Start by adding your first resident.'
             }
           </p>
+          <button onClick={onAddResident} className="add-first-resident-btn">
+            Add First Resident
+          </button>
         </div>
       ) : (
         <div className="residents-table-container">
           <table className="residents-table">
             <thead>
               <tr>
-                <th>Apartment</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Apartment</th>
                 <th>Status</th>
                 <th>Monthly Charge</th>
+                <th>Added Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredResidents.map((resident) => (
                 <tr key={resident._id}>
-                  <td className="apartment-cell">
-                    <span className="apartment-number">{resident.apartmentNumber}</span>
-                  </td>
                   <td className="name-cell">
                     <span className="resident-name">{resident.name}</span>
                   </td>
                   <td className="email-cell">{resident.email}</td>
-                  <td className="phone-cell">{resident.phone}</td>
+                  <td className="phone-cell">{resident.phone || '-'}</td>
+                  <td className="apartment-cell">
+                    <span className="apartment-number">{resident.apartmentNumber || '-'}</span>
+                  </td>
                   <td className="status-cell">
                     <span className={`status-badge ${resident.status}`}>
-                      {resident.status === 'owner' ? '🏠 Owner' : '🏠 Tenant'}
+                      {resident.status === 'owner' ? '🏠 Owner' : '🏘️ Tenant'}
                     </span>
                   </td>
                   <td className="charge-cell">
-                    <span className="charge-amount">{resident.monthlyCharge} MAD</span>
+                    {resident.monthlyCharge ? `${resident.monthlyCharge} MAD` : '-'}
+                  </td>
+                  <td className="date-cell">
+                    {new Date(resident.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
                   </td>
                   <td className="actions-cell">
                     <button
@@ -208,9 +218,10 @@ const ResidentList = ({ onAddResident, onEditResident }) => {
                     <button
                       onClick={() => handleDeleteResident(resident._id, resident.name)}
                       className="delete-btn"
+                      disabled={deletingResident === resident._id}
                       title="Delete resident"
                     >
-                      🗑️
+                      {deletingResident === resident._id ? '⏳' : '🗑️'}
                     </button>
                   </td>
                 </tr>
