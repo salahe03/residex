@@ -1,44 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import ResidentList from './ResidentList';
-import AddResident from './AddResident';
-import EditResident from './EditResident';
-import PendingUsers from './PendingUsers';
-import UserManagement from './UserManagement';
+import ResidentManagement from './ResidentManagement';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user, logout, isAdmin } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
-  const [selectedResident, setSelectedResident] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     console.log('User logged out');
-  };
-
-  const handleAddResident = () => {
-    setCurrentView('add-resident');
-  };
-
-  const handleEditResident = (resident) => {
-    setSelectedResident(resident);
-    setCurrentView('edit-resident');
-  };
-
-  const handleResidentSuccess = () => {
-    setCurrentView('residents');
-    setSelectedResident(null);
-  };
-
-  const handleCancel = () => {
-    if (currentView === 'add-resident' || currentView === 'edit-resident') {
-      setCurrentView('residents');
-    } else {
-      setCurrentView('dashboard');
-    }
-    setSelectedResident(null);
   };
 
   const handleNavClick = (view) => {
@@ -48,36 +20,8 @@ const Dashboard = () => {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'residents':
-        return (
-          <ResidentList 
-            onAddResident={handleAddResident}
-            onEditResident={handleEditResident}
-          />
-        );
-      
-      case 'add-resident':
-        return (
-          <AddResident 
-            onSuccess={handleResidentSuccess}
-            onCancel={handleCancel}
-          />
-        );
-      
-      case 'edit-resident':
-        return (
-          <EditResident 
-            resident={selectedResident}
-            onSuccess={handleResidentSuccess}
-            onCancel={handleCancel}
-          />
-        );
-      
-      case 'pending-users':
-        return <PendingUsers />;
-      
-      case 'user-management':
-        return <UserManagement />;
+      case 'resident-management':
+        return <ResidentManagement />;
       
       default:
         return (
@@ -146,76 +90,54 @@ const Dashboard = () => {
                 onClick={() => handleNavClick('dashboard')}
               >
                 <span className="nav-icon">🏠</span>
-                <span className="nav-text">Dashboard</span>
+                Dashboard
               </button>
             </li>
             
             {isAdmin && (
-              <>
-                <li>
-                  <button 
-                    className={`nav-item ${currentView === 'pending-users' ? 'active' : ''}`}
-                    onClick={() => handleNavClick('pending-users')}
-                  >
-                    <span className="nav-icon">⏳</span>
-                    <span className="nav-text">Pending Users</span>
-                  </button>
-                </li>
-                
-                <li>
-                  <button 
-                    className={`nav-item ${currentView === 'user-management' ? 'active' : ''}`}
-                    onClick={() => handleNavClick('user-management')}
-                  >
-                    <span className="nav-icon">👤</span>
-                    <span className="nav-text">User Management</span>
-                  </button>
-                </li>
-                
-                <li>
-                  <button 
-                    className={`nav-item ${currentView === 'residents' ? 'active' : ''}`}
-                    onClick={() => handleNavClick('residents')}
-                  >
-                    <span className="nav-icon">👥</span>
-                    <span className="nav-text">Residents</span>
-                  </button>
-                </li>
-                
-                <li>
-                  <button 
-                    className="nav-item disabled"
-                    disabled
-                  >
-                    <span className="nav-icon">💰</span>
-                    <span className="nav-text">Payments</span>
-                  </button>
-                </li>
-                
-                <li>
-                  <button 
-                    className="nav-item disabled"
-                    disabled
-                  >
-                    <span className="nav-icon">📊</span>
-                    <span className="nav-text">Expenses</span>
-                  </button>
-                </li>
-                
-                <li>
-                  <button 
-                    className="nav-item disabled"
-                    disabled
-                  >
-                    <span className="nav-icon">📄</span>
-                    <span className="nav-text">Documents</span>
-                  </button>
-                </li>
-              </>
+              <li>
+                <button 
+                  className={`nav-item ${currentView === 'resident-management' ? 'active' : ''}`}
+                  onClick={() => handleNavClick('resident-management')}
+                >
+                  <span className="nav-icon">👥</span>
+                  Resident Management
+                </button>
+              </li>
             )}
+            
+            <li>
+              <button 
+                className={`nav-item ${currentView === 'payments' ? 'active' : ''}`}
+                onClick={() => handleNavClick('payments')}
+              >
+                <span className="nav-icon">💰</span>
+                Payments
+              </button>
+            </li>
+            
+            <li>
+              <button 
+                className={`nav-item ${currentView === 'expenses' ? 'active' : ''}`}
+                onClick={() => handleNavClick('expenses')}
+              >
+                <span className="nav-icon">📊</span>
+                Expenses
+              </button>
+            </li>
+            
+            <li>
+              <button 
+                className={`nav-item ${currentView === 'documents' ? 'active' : ''}`}
+                onClick={() => handleNavClick('documents')}
+              >
+                <span className="nav-icon">📄</span>
+                Documents
+              </button>
+            </li>
           </ul>
         </nav>
-
+        
         <div className="sidebar-footer">
           <div className="user-profile">
             <div className="user-avatar">
@@ -245,11 +167,10 @@ const Dashboard = () => {
           
           <div className="page-title">
             {currentView === 'dashboard' && 'Dashboard'}
-            {currentView === 'pending-users' && 'Pending Users'}
-            {currentView === 'user-management' && 'User Management'}
-            {currentView === 'residents' && 'Resident Management'}
-            {currentView === 'add-resident' && 'Add New Resident'}
-            {currentView === 'edit-resident' && 'Edit Resident'}
+            {currentView === 'resident-management' && 'Resident Management'}
+            {currentView === 'payments' && 'Payments'}
+            {currentView === 'expenses' && 'Expenses'}
+            {currentView === 'documents' && 'Documents'}
           </div>
         </header>
 
