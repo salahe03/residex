@@ -6,7 +6,6 @@ import './PaymentManagement.css';
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'all-payments' : 'my-payments');
   
   // Shared states
   const [loading, setLoading] = useState(true);
@@ -24,25 +23,21 @@ const PaymentManagement = () => {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  // Load data based on active tab and user role
+  // Load data based on user role
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
     
     try {
       if (isAdmin) {
-        // Admin can see stats
+        // Admin sees all payments and stats
         const statsResponse = await paymentService.getPaymentStats();
         setStats(statsResponse.data);
         
-        if (activeTab === 'all-payments') {
-          const paymentsResponse = await paymentService.getAllPayments();
-          setPayments(paymentsResponse.data || []);
-        }
-      }
-      
-      if (activeTab === 'my-payments' || !isAdmin) {
-        // Load user's own payments
+        const paymentsResponse = await paymentService.getAllPayments();
+        setPayments(paymentsResponse.data || []);
+      } else {
+        // Regular users see only their own payments
         const userPaymentsResponse = await paymentService.getUserPayments(user.id);
         setPayments(userPaymentsResponse.data || []);
       }
@@ -52,13 +47,13 @@ const PaymentManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, isAdmin, user.id]);
+  }, [isAdmin, user.id]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Handle marking payment as paid
+  // Handle marking payment as paid (admin only)
   const handleMarkPaid = async (payment) => {
     setSelectedPayment(payment);
     setShowMarkPaid(true);
@@ -82,7 +77,7 @@ const PaymentManagement = () => {
     }
   };
 
-  // Handle creating bulk payments
+  // Handle creating bulk payments (admin only)
   const handleCreateBulkSuccess = () => {
     setShowCreateBulk(false);
     loadData(); // Refresh data
@@ -151,34 +146,17 @@ const PaymentManagement = () => {
 
   return (
     <div className="payment-management-container">
-      {/* Tab Navigation */}
-      {isAdmin && (
-        <div className="payment-tabs">
-          <button 
-            className={`tab-button ${activeTab === 'all-payments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all-payments')}
-          >
-            💰 All Payments
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'my-payments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('my-payments')}
-          >
-            📋 My Payments
-          </button>
-        </div>
-      )}
-
       {/* Header with stats */}
       <div className="payment-header">
         <div className="header-title">
-          <h2>💰 Payment Management</h2>
+          <h2>💰 {isAdmin ? 'Payment Management' : 'My Payments'}</h2>
           <p>
-            {isAdmin && activeTab === 'all-payments' ? 'Manage all resident payments' : 'View your payment history'}
+            {isAdmin ? 'Manage all resident payments and charges' : 'View your payment history and status'}
           </p>
         </div>
         
-        {stats && isAdmin && activeTab === 'all-payments' && (
+        {/* Admin Stats */}
+        {stats && isAdmin && (
           <div className="payment-stats">
             <div className="stat-card">
               <span className="stat-number">{stats.total.count}</span>
@@ -223,7 +201,8 @@ const PaymentManagement = () => {
           </select>
         </div>
         
-        {isAdmin && activeTab === 'all-payments' && (
+        {/* Admin Only: Create Bulk Payments Button */}
+        {isAdmin && (
           <button onClick={() => setShowCreateBulk(true)} className="create-bulk-btn">
             + Create Bulk Payments
           </button>
@@ -244,7 +223,9 @@ const PaymentManagement = () => {
           <p>
             {searchTerm || filterStatus !== 'all' 
               ? 'Try adjusting your search or filters.' 
-              : 'No payments have been created yet.'
+              : isAdmin 
+                ? 'No payments have been created yet. Start by creating bulk payments for residents.'
+                : 'No payments have been assigned to you yet.'
             }
           </p>
         </div>
@@ -253,19 +234,22 @@ const PaymentManagement = () => {
           <table className="payment-table">
             <thead>
               <tr>
-                {isAdmin && activeTab === 'all-payments' && <th>Resident</th>}
+                {/* Admin sees resident column, users don't */}
+                {isAdmin && <th>Resident</th>}
                 <th>Description</th>
                 <th>Period</th>
                 <th>Amount</th>
                 <th>Due Date</th>
                 <th>Status</th>
+                {/* Admin sees actions column */}
                 {isAdmin && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredPayments.map((payment) => (
                 <tr key={payment._id}>
-                  {isAdmin && activeTab === 'all-payments' && (
+                  {/* Admin sees resident info */}
+                  {isAdmin && (
                     <td className="resident-cell">
                       <div className="resident-info">
                         <span className="resident-name">{payment.resident?.name}</span>
@@ -285,6 +269,7 @@ const PaymentManagement = () => {
                       <div className="payment-date">Paid: {formatDate(payment.paymentDate)}</div>
                     )}
                   </td>
+                  {/* Admin actions */}
                   {isAdmin && (
                     <td className="actions-cell">
                       {payment.status === 'pending' && (
@@ -313,8 +298,8 @@ const PaymentManagement = () => {
         </div>
       )}
 
-      {/* Mark as Paid Modal */}
-      {showMarkPaid && selectedPayment && (
+      {/* Mark as Paid Modal (Admin only) */}
+      {showMarkPaid && selectedPayment && isAdmin && (
         <MarkPaidModal
           payment={selectedPayment}
           onConfirm={handleConfirmMarkPaid}
@@ -328,7 +313,7 @@ const PaymentManagement = () => {
   );
 };
 
-// Mark as Paid Modal Component
+// Mark as Paid Modal Component (Admin only)
 const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
   const [formData, setFormData] = useState({
     paymentMethod: 'cash',
