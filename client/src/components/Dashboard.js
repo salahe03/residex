@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import ResidentManagement from './ResidentManagement';
+import PaymentManagement from './PaymentManagement'; // Add this import
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -22,6 +23,9 @@ const Dashboard = () => {
     switch (currentView) {
       case 'resident-management':
         return <ResidentManagement />;
+      
+      case 'payments':
+        return <PaymentManagement />; // Add this case
       
       default:
         return (
@@ -57,8 +61,13 @@ const Dashboard = () => {
                   <span className="status-complete">✅ Complete</span>
                 </div>
                 <div className="stat-item">
-                  <h4>Payment Tracking</h4>
-                  <p>Track monthly charges and payments</p>
+                  <h4>Payment Management</h4> {/* Update this */}
+                  <p>Track payments and create bulk charges</p>
+                  <span className="status-complete">✅ Complete</span> {/* Update this */}
+                </div>
+                <div className="stat-item">
+                  <h4>Expense Tracking</h4>
+                  <p>Monitor building expenses and receipts</p>
                   <span className="status-pending">⏳ Coming Soon</span>
                 </div>
               </div>
@@ -112,7 +121,7 @@ const Dashboard = () => {
                 onClick={() => handleNavClick('payments')}
               >
                 <span className="nav-icon">💰</span>
-                Payments
+                {isAdmin ? 'Payment Management' : 'My Payments'}
               </button>
             </li>
             
@@ -168,7 +177,7 @@ const Dashboard = () => {
           <div className="page-title">
             {currentView === 'dashboard' && 'Dashboard'}
             {currentView === 'resident-management' && 'Resident Management'}
-            {currentView === 'payments' && 'Payments'}
+            {currentView === 'payments' && (isAdmin ? 'Payment Management' : 'My Payments')}
             {currentView === 'expenses' && 'Expenses'}
             {currentView === 'documents' && 'Documents'}
           </div>
@@ -180,12 +189,12 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
           className="sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
-        />
+        ></div>
       )}
     </div>
   );

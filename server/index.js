@@ -5,7 +5,8 @@ require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users'); // Only user routes now
+const userRoutes = require('./routes/users');
+const paymentRoutes = require('./routes/payments'); // Add this line
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,14 +17,15 @@ app.use(express.json()); // converts incoming json payloads to js objects
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes); // Single collection for everything
+app.use('/api/users', userRoutes);
+app.use('/api/payments', paymentRoutes); // new payment route
 
 // Basic route
 app.get('/', (req, res) => {
   res.json({ message: 'Residex Server is running!' });
 });
 
-// MongoDB connection
+// MongoDB connection 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/residex')
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
