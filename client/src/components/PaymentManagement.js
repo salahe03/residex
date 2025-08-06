@@ -201,10 +201,10 @@ const PaymentManagement = () => {
           </select>
         </div>
         
-        {/* Admin Only: Create Bulk Payments Button */}
+        {/* Admin Only: Create New Payment Button */}
         {isAdmin && (
           <button onClick={() => setShowCreateBulk(true)} className="create-bulk-btn">
-            + Create Bulk Payments
+            + New Payment
           </button>
         )}
       </div>

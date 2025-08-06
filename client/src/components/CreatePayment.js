@@ -3,15 +3,17 @@ import { paymentService } from '../services/paymentService';
 import { userService } from '../services/userService';
 import './PaymentModals.css';
 
-const CreateBulkPayments = ({ onSuccess, onCancel }) => {
+const CreatePayment = ({ onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
     period: '',
     dueDate: '',
-    type: 'monthly_charge'
+    type: 'monthly_charge',
+    paymentScope: 'bulk', // NEW: 'bulk' or 'individual'
+    selectedResident: '' // NEW: for individual payments
   });
-  const [residents, setResidents] = useState([]);
+  const [allResidents, setAllResidents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,7 +24,7 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
         const activeResidents = response.data?.filter(user => 
           user.role !== 'admin' && user.isActive
         ) || [];
-        setResidents(activeResidents);
+        setAllResidents(activeResidents);
       } catch (error) {
         console.error('Error loading residents:', error);
         setError('Failed to load residents');
@@ -31,6 +33,18 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
 
     loadResidents();
   }, []);
+
+  // Calculate affected residents based on scope
+  const getAffectedResidents = () => {
+    if (formData.paymentScope === 'bulk') {
+      return allResidents;
+    } else if (formData.paymentScope === 'individual' && formData.selectedResident) {
+      return allResidents.filter(resident => resident._id === formData.selectedResident);
+    }
+    return [];
+  };
+
+  const affectedResidents = getAffectedResidents();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,8 +62,13 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
       return;
     }
 
-    if (residents.length === 0) {
-      setError('No active residents found to create payments for');
+    if (formData.paymentScope === 'individual' && !formData.selectedResident) {
+      setError('Please select a resident for individual payment');
+      return;
+    }
+
+    if (affectedResidents.length === 0) {
+      setError('No residents found to create payments for');
       return;
     }
 
@@ -62,18 +81,22 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
         description: formData.description.trim(),
         period: formData.period.trim(),
         dueDate: formData.dueDate,
-        type: formData.type
+        type: formData.type,
+        // NEW: Send specific residents for individual payments
+        ...(formData.paymentScope === 'individual' && {
+          targetResidents: [formData.selectedResident]
+        })
       };
 
-      console.log('Creating bulk payments for', residents.length, 'residents');
+      console.log('Creating payment for', affectedResidents.length, 'resident(s)');
       
       const response = await paymentService.createBulkPayments(paymentData);
       
-      console.log('Bulk payments created successfully:', response.data);
+      console.log('Payment created successfully:', response.data);
       onSuccess();
       
     } catch (error) {
-      console.error('Error creating bulk payments:', error);
+      console.error('Error creating payment:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -108,7 +131,7 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
-          <h2>Create Bulk Payments</h2>
+          <h2>💰 Create New Payment</h2>
           <button onClick={onCancel} className="close-btn" disabled={loading}>
             ×
           </button>
@@ -117,8 +140,9 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
         <div className="bulk-payment-info">
           <div className="info-card">
             <h3>📊 Payment Summary</h3>
-            <p><strong>Active Residents:</strong> {residents.length}</p>
-            <p><strong>Total Amount:</strong> {formData.amount ? `${parseFloat(formData.amount) * residents.length} MAD` : '0 MAD'}</p>
+            <p><strong>Payment Scope:</strong> {formData.paymentScope === 'bulk' ? 'All Active Residents' : 'Individual Resident'}</p>
+            <p><strong>Affected Residents:</strong> {affectedResidents.length}</p>
+            <p><strong>Total Amount:</strong> {formData.amount ? `${parseFloat(formData.amount) * affectedResidents.length} MAD` : '0 MAD'}</p>
           </div>
         </div>
 
@@ -126,6 +150,64 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
           {error && (
             <div className="form-error">
               ❌ {error}
+            </div>
+          )}
+
+          {/* NEW: Payment Scope Selection */}
+          <div className="form-group scope-selection">
+            <label>Payment Scope *</label>
+            <div className="scope-options">
+              <label className="scope-option">
+                <input
+                  type="radio"
+                  name="paymentScope"
+                  value="bulk"
+                  checked={formData.paymentScope === 'bulk'}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                <span className="scope-label">
+                  <strong>📢 Bulk Payment</strong>
+                  <small>Create payment for all active residents</small>
+                </span>
+              </label>
+              
+              <label className="scope-option">
+                <input
+                  type="radio"
+                  name="paymentScope"
+                  value="individual"
+                  checked={formData.paymentScope === 'individual'}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                <span className="scope-label">
+                  <strong>👤 Individual Payment</strong>
+                  <small>Create payment for specific resident</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* NEW: Resident Selection (for individual payments) */}
+          {formData.paymentScope === 'individual' && (
+            <div className="form-group">
+              <label htmlFor="selectedResident">Select Resident *</label>
+              <select
+                id="selectedResident"
+                name="selectedResident"
+                value={formData.selectedResident}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              >
+                <option value="">Choose a resident...</option>
+                {allResidents.map(resident => (
+                  <option key={resident._id} value={resident._id}>
+                    {resident.name} - {resident.apartmentNumber}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -207,19 +289,24 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
             </div>
           </div>
 
-          {residents.length > 0 && (
+          {/* Enhanced Residents Preview */}
+          {affectedResidents.length > 0 && (
             <div className="residents-preview">
-              <h4>💰 Payments will be created for:</h4>
+              <h4>
+                💰 Payment will be created for{' '}
+                {formData.paymentScope === 'bulk' ? 'all residents' : 'selected resident'}:
+              </h4>
               <div className="residents-list">
-                {residents.slice(0, 5).map(resident => (
+                {affectedResidents.slice(0, 5).map(resident => (
                   <div key={resident._id} className="resident-item">
                     <span className="resident-name">{resident.name}</span>
                     <span className="resident-apartment">{resident.apartmentNumber}</span>
+                    <span className="resident-amount">{formData.amount} MAD</span>
                   </div>
                 ))}
-                {residents.length > 5 && (
+                {affectedResidents.length > 5 && (
                   <div className="more-residents">
-                    ... and {residents.length - 5} more residents
+                    ... and {affectedResidents.length - 5} more residents
                   </div>
                 )}
               </div>
@@ -238,9 +325,9 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
             <button 
               type="submit" 
               className="submit-btn"
-              disabled={loading || residents.length === 0}
+              disabled={loading || affectedResidents.length === 0}
             >
-              {loading ? 'Creating Payments...' : `Create ${residents.length} Payments`}
+              {loading ? 'Creating Payment...' : `Create Payment (${affectedResidents.length} resident${affectedResidents.length !== 1 ? 's' : ''})`}
             </button>
           </div>
         </form>
@@ -249,4 +336,4 @@ const CreateBulkPayments = ({ onSuccess, onCancel }) => {
   );
 };
 
-export default CreateBulkPayments;
+export default CreatePayment;
