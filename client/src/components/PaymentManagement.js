@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
-import CreateBulkPayments from './CreateBulkPayments';
+import CreatePayment from './CreatePayment'; // Updated import
 import './PaymentManagement.css';
 
 const PaymentManagement = () => {
@@ -134,10 +134,10 @@ const PaymentManagement = () => {
     );
   }
 
-  // Render create bulk payments modal
+  // Render create payment modal
   if (showCreateBulk) {
     return (
-      <CreateBulkPayments 
+      <CreatePayment 
         onSuccess={handleCreateBulkSuccess}
         onCancel={() => setShowCreateBulk(false)}
       />
