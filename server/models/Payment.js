@@ -15,7 +15,7 @@ const paymentSchema = new mongoose.Schema({
   period: {
     type: String,
     required: true,
-    trim: true // e.g., "January 2024", "Q1 2024"
+    trim: true
   },
   dueDate: {
     type: Date,
@@ -34,39 +34,56 @@ const paymentSchema = new mongoose.Schema({
     required: true
   },
   
-  // Payment status
+  // Payment status - ENHANCED
   status: {
     type: String,
-    enum: ['pending', 'paid', 'overdue'],
+    enum: ['pending', 'submitted', 'paid', 'overdue'], // Added 'submitted'
     default: 'pending'
   },
   
-  // Payment completion details
-  paymentDate: {
-    type: Date,
-    default: null
-  },
-  paymentMethod: {
-    type: String,
-    enum: ['cash', 'bank_transfer', 'check', 'other'],
-    default: null
-  },
-  reference: {
-    type: String,
-    trim: true,
-    default: null
-  },
-  notes: {
-    type: String,
-    trim: true,
-    default: null
+  // Payment submission details (from tenant)
+  paymentSubmission: {
+    submittedAt: {
+      type: Date,
+      default: null
+    },
+    paymentMethod: {
+      type: String,
+      enum: ['cash', 'bank_transfer', 'check', 'other'],
+      default: null
+    },
+    paymentDate: {
+      type: Date,
+      default: null
+    },
+    reference: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: null
+    }
   },
   
-  // Admin who processed the payment
-  processedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: null
+  // Admin confirmation details
+  confirmation: {
+    confirmedAt: {
+      type: Date,
+      default: null
+    },
+    confirmedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    adminNotes: {
+      type: String,
+      trim: true,
+      default: null
+    }
   }
 }, {
   timestamps: true
