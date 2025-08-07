@@ -125,9 +125,9 @@ const getAllPayments = async (req, res) => {
 // POST /api/payments/bulk-create - Create bulk payments for all residents (Admin only)
 const createBulkPayments = async (req, res) => {
   try {
-    console.log('1. Creating bulk payments...');
+    console.log('1. Creating payments...');
     
-    const { amount, description, period, dueDate, type = 'monthly_charge' } = req.body;
+    const { amount, description, period, dueDate, type = 'monthly_charge', targetResidents } = req.body;
     
     // Validate required fields
     if (!amount || !description || !period || !dueDate) {
@@ -137,20 +137,38 @@ const createBulkPayments = async (req, res) => {
       });
     }
     
-    // Get all active residents (non-admin users)
-    const residents = await User.find({ 
-      role: { $ne: 'admin' },
-      isActive: true
-    });
+    let residents;
     
-    if (residents.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'No active residents found'
+    // NEW: Handle targeted residents for individual payments
+    if (targetResidents && targetResidents.length > 0) {
+      residents = await User.find({ 
+        _id: { $in: targetResidents },
+        role: { $ne: 'admin' },
+        isActive: true
       });
+      
+      if (residents.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No valid target residents found'
+        });
+      }
+    } else {
+      // Get all active residents (existing bulk logic)
+      residents = await User.find({ 
+        role: { $ne: 'admin' },
+        isActive: true
+      });
+      
+      if (residents.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No active residents found'
+        });
+      }
     }
     
-    // Create payments for each resident
+    // Create payments for selected residents
     const paymentPromises = residents.map(resident => {
       return new Payment({
         amount,
@@ -165,11 +183,11 @@ const createBulkPayments = async (req, res) => {
     
     const createdPayments = await Promise.all(paymentPromises);
     
-    console.log(`2. Created ${createdPayments.length} bulk payments`);
+    console.log(`2. Created ${createdPayments.length} payments`);
     
     res.status(201).json({
       success: true,
-      message: `Created ${createdPayments.length} payments for residents`,
+      message: `Created ${createdPayments.length} payment${createdPayments.length !== 1 ? 's' : ''} for resident${createdPayments.length !== 1 ? 's' : ''}`,
       data: {
         count: createdPayments.length,
         payments: createdPayments
@@ -177,10 +195,10 @@ const createBulkPayments = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error creating bulk payments:', error);
+    console.error('Error creating payments:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error while creating bulk payments'
+      error: 'Server error while creating payments'
     });
   }
 };

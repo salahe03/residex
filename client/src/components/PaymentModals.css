@@ -308,6 +308,81 @@
   font-weight: 500;
 }
 
+/* Payment Scope Selection */
+.scope-selection {
+  margin-bottom: 24px;
+}
+
+.scope-selection label {
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.scope-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.scope-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scope-option:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.scope-option input[type="radio"] {
+  margin: 4px 0 0 0;
+}
+
+.scope-option input[type="radio"]:checked + .scope-label {
+  color: #667eea;
+}
+
+.scope-option:has(input[type="radio"]:checked) {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.scope-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scope-label strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.scope-label small {
+  font-size: 12px;
+  color: #666;
+  font-weight: normal;
+}
+
+/* Enhanced resident item with amount */
+.resident-amount {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modal-overlay {
@@ -390,5 +465,9 @@
   .form-group textarea {
     padding: 10px 12px;
     font-size: 14px;
+  }
+  
+  .scope-options {
+    grid-template-columns: 1fr;
   }
 }
