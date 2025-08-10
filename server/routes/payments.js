@@ -4,7 +4,9 @@ const {
   getAllPayments,
   getUserPayments,
   createBulkPayments,
-  markPaymentPaid,
+  submitPayment,
+  confirmPayment,
+  rejectPayment,
   updatePayment,
   deletePayment,
   getPaymentStats
@@ -26,8 +28,14 @@ router.get('/', requireAdmin, getAllPayments);
 // POST /api/payments/bulk-create - Create bulk payments for all residents (Admin only)
 router.post('/bulk-create', requireAdmin, createBulkPayments);
 
-// PUT /api/payments/:id/mark-paid - Mark payment as paid (Admin only)
-router.put('/:id/mark-paid', requireAdmin, markPaymentPaid);
+// PUT /api/payments/:id/submit - Submit payment proof (Tenant)
+router.put('/:id/submit', submitPayment);
+
+// PUT /api/payments/:id/confirm - Confirm payment (Admin only)
+router.put('/:id/confirm', requireAdmin, confirmPayment);
+
+// PUT /api/payments/:id/reject - Reject payment submission (Admin only)
+router.put('/:id/reject', requireAdmin, rejectPayment);
 
 // PUT /api/payments/:id - Update payment (Admin only)
 router.put('/:id', requireAdmin, updatePayment);
