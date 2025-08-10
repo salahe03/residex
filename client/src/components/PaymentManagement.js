@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
-import CreatePayment from './CreatePayment'; // Updated import
+import CreatePayment from './CreatePayment';
 import './PaymentManagement.css';
 
 const PaymentManagement = () => {
@@ -20,7 +20,8 @@ const PaymentManagement = () => {
   
   // Modal states
   const [showCreateBulk, setShowCreateBulk] = useState(false);
-  const [showMarkPaid, setShowMarkPaid] = useState(false);
+  const [showSubmitPayment, setShowSubmitPayment] = useState(false);
+  const [showConfirmPayment, setShowConfirmPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   // Load data based on user role
@@ -53,27 +54,69 @@ const PaymentManagement = () => {
     loadData();
   }, [loadData]);
 
-  // Handle marking payment as paid (admin only)
-  const handleMarkPaid = async (payment) => {
+  // Handle tenant payment submission
+  const handleSubmitPayment = async (payment) => {
     setSelectedPayment(payment);
-    setShowMarkPaid(true);
+    setShowSubmitPayment(true);
   };
 
-  const handleConfirmMarkPaid = async (paymentDetails) => {
+  const handleConfirmSubmitPayment = async (paymentDetails) => {
     try {
       setProcessingPayment(selectedPayment._id);
-      await paymentService.markPaymentPaid(selectedPayment._id, paymentDetails);
+      await paymentService.submitPayment(selectedPayment._id, paymentDetails);
       
-      setShowMarkPaid(false);
+      setShowSubmitPayment(false);
       setSelectedPayment(null);
       loadData(); // Refresh data
       
-      console.log('Payment marked as paid successfully');
+      console.log('Payment submitted successfully');
     } catch (error) {
-      console.error('Error marking payment as paid:', error);
+      console.error('Error submitting payment:', error);
       setError(error.message);
     } finally {
       setProcessingPayment(null);
+    }
+  };
+
+  // Handle admin payment confirmation
+  const handleConfirmPayment = async (payment) => {
+    setSelectedPayment(payment);
+    setShowConfirmPayment(true);
+  };
+
+  const handleConfirmConfirmPayment = async (adminNotes) => {
+    try {
+      setProcessingPayment(selectedPayment._id);
+      await paymentService.confirmPayment(selectedPayment._id, adminNotes);
+      
+      setShowConfirmPayment(false);
+      setSelectedPayment(null);
+      loadData(); // Refresh data
+      
+      console.log('Payment confirmed successfully');
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      setError(error.message);
+    } finally {
+      setProcessingPayment(null);
+    }
+  };
+
+  // Handle admin payment rejection
+  const handleRejectPayment = async (payment) => {
+    if (window.confirm('Are you sure you want to reject this payment submission?')) {
+      try {
+        setProcessingPayment(payment._id);
+        await paymentService.rejectPayment(payment._id, 'Payment submission rejected by admin');
+        
+        loadData(); // Refresh data
+        console.log('Payment rejected successfully');
+      } catch (error) {
+        console.error('Error rejecting payment:', error);
+        setError(error.message);
+      } finally {
+        setProcessingPayment(null);
+      }
     }
   };
 
@@ -99,6 +142,8 @@ const PaymentManagement = () => {
     switch (status) {
       case 'paid':
         return 'status-paid';
+      case 'submitted':
+        return 'status-submitted';
       case 'pending':
         return 'status-pending';
       case 'overdue':
@@ -123,7 +168,7 @@ const PaymentManagement = () => {
   };
 
   // Loading state
-  if (loading && !showCreateBulk && !showMarkPaid) {
+  if (loading && !showCreateBulk && !showSubmitPayment && !showConfirmPayment) {
     return (
       <div className="payment-management-container">
         <div className="loading-message">
@@ -151,7 +196,7 @@ const PaymentManagement = () => {
         <div className="header-title">
           <h2>💰 {isAdmin ? 'Payment Management' : 'My Payments'}</h2>
           <p>
-            {isAdmin ? 'Manage all resident payments and charges' : 'View your payment history and status'}
+            {isAdmin ? 'Manage all resident payments and charges' : 'View your payment history and submit payment proofs'}
           </p>
         </div>
         
@@ -196,6 +241,7 @@ const PaymentManagement = () => {
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
+            <option value="submitted">Submitted</option>
             <option value="paid">Paid</option>
             <option value="overdue">Overdue</option>
           </select>
@@ -241,8 +287,7 @@ const PaymentManagement = () => {
                 <th>Amount</th>
                 <th>Due Date</th>
                 <th>Status</th>
-                {/* Admin sees actions column */}
-                {isAdmin && <th>Actions</th>}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -263,27 +308,51 @@ const PaymentManagement = () => {
                   <td className="date-cell">{formatDate(payment.dueDate)}</td>
                   <td className="status-cell">
                     <span className={`status-badge ${getStatusBadge(payment.status)}`}>
-                      {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      {payment.status === 'submitted' ? 'Awaiting Confirmation' : 
+                       payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                     </span>
-                    {payment.paymentDate && (
-                      <div className="payment-date">Paid: {formatDate(payment.paymentDate)}</div>
+                    {payment.confirmation?.confirmedAt && (
+                      <div className="payment-date">Confirmed: {formatDate(payment.confirmation.confirmedAt)}</div>
+                    )}
+                    {payment.paymentSubmission?.submittedAt && (
+                      <div className="payment-date">Submitted: {formatDate(payment.paymentSubmission.submittedAt)}</div>
                     )}
                   </td>
-                  {/* Admin actions */}
-                  {isAdmin && (
-                    <td className="actions-cell">
-                      {payment.status === 'pending' && (
+                  <td className="actions-cell">
+                    {/* Tenant Actions */}
+                    {!isAdmin && (payment.status === 'pending' || payment.status === 'overdue') && (
+                      <button
+                        onClick={() => handleSubmitPayment(payment)}
+                        className="pay-btn"
+                        disabled={processingPayment === payment._id}
+                        title="Submit payment proof"
+                      >
+                        {processingPayment === payment._id ? '⏳' : '💳 Pay'}
+                      </button>
+                    )}
+                    
+                    {/* Admin Actions */}
+                    {isAdmin && payment.status === 'submitted' && (
+                      <div className="admin-actions">
                         <button
-                          onClick={() => handleMarkPaid(payment)}
-                          className="mark-paid-btn"
+                          onClick={() => handleConfirmPayment(payment)}
+                          className="confirm-btn"
                           disabled={processingPayment === payment._id}
-                          title="Mark as paid"
+                          title="Confirm payment"
                         >
                           {processingPayment === payment._id ? '⏳' : '✅'}
                         </button>
-                      )}
-                    </td>
-                  )}
+                        <button
+                          onClick={() => handleRejectPayment(payment)}
+                          className="reject-btn"
+                          disabled={processingPayment === payment._id}
+                          title="Reject payment"
+                        >
+                          ❌
+                        </button>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -298,13 +367,25 @@ const PaymentManagement = () => {
         </div>
       )}
 
-      {/* Mark as Paid Modal (Admin only) */}
-      {showMarkPaid && selectedPayment && isAdmin && (
-        <MarkPaidModal
+      {/* Submit Payment Modal (Tenant) */}
+      {showSubmitPayment && selectedPayment && !isAdmin && (
+        <SubmitPaymentModal
           payment={selectedPayment}
-          onConfirm={handleConfirmMarkPaid}
+          onConfirm={handleConfirmSubmitPayment}
           onCancel={() => {
-            setShowMarkPaid(false);
+            setShowSubmitPayment(false);
+            setSelectedPayment(null);
+          }}
+        />
+      )}
+
+      {/* Confirm Payment Modal (Admin) */}
+      {showConfirmPayment && selectedPayment && isAdmin && (
+        <ConfirmPaymentModal
+          payment={selectedPayment}
+          onConfirm={handleConfirmConfirmPayment}
+          onCancel={() => {
+            setShowConfirmPayment(false);
             setSelectedPayment(null);
           }}
         />
@@ -313,10 +394,10 @@ const PaymentManagement = () => {
   );
 };
 
-// Mark as Paid Modal Component (Admin only)
-const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
+// Submit Payment Modal Component (Tenant)
+const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
   const [formData, setFormData] = useState({
-    paymentMethod: 'cash',
+    paymentMethod: 'bank_transfer',
     paymentDate: new Date().toISOString().split('T')[0],
     reference: '',
     notes: ''
@@ -330,7 +411,7 @@ const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
     try {
       await onConfirm(formData);
     } catch (error) {
-      console.error('Error confirming payment:', error);
+      console.error('Error submitting payment:', error);
     } finally {
       setLoading(false);
     }
@@ -348,20 +429,20 @@ const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
-          <h3>Mark Payment as Paid</h3>
+          <h3>💳 Submit Payment Proof</h3>
           <button onClick={onCancel} className="close-btn">×</button>
         </div>
 
         <div className="payment-details">
-          <p><strong>Resident:</strong> {payment.resident?.name}</p>
           <p><strong>Description:</strong> {payment.description}</p>
-          <p><strong>Amount:</strong> {payment.amount} MAD</p>
+          <p><strong>Amount Due:</strong> {payment.amount} MAD</p>
           <p><strong>Period:</strong> {payment.period}</p>
+          <p><strong>Due Date:</strong> {new Date(payment.dueDate).toLocaleDateString()}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mark-paid-form">
+        <form onSubmit={handleSubmit} className="submit-payment-form">
           <div className="form-group">
-            <label htmlFor="paymentMethod">Payment Method *</label>
+            <label htmlFor="paymentMethod">How did you pay? *</label>
             <select
               id="paymentMethod"
               name="paymentMethod"
@@ -370,15 +451,15 @@ const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
               required
               disabled={loading}
             >
-              <option value="cash">Cash</option>
               <option value="bank_transfer">Bank Transfer</option>
+              <option value="cash">Cash</option>
               <option value="check">Check</option>
               <option value="other">Other</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="paymentDate">Payment Date *</label>
+            <label htmlFor="paymentDate">When did you pay? *</label>
             <input
               type="date"
               id="paymentDate"
@@ -391,26 +472,26 @@ const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="reference">Reference (Optional)</label>
+            <label htmlFor="reference">Reference/Transaction ID</label>
             <input
               type="text"
               id="reference"
               name="reference"
               value={formData.reference}
               onChange={handleChange}
-              placeholder="Transaction ID, Check number, etc."
+              placeholder="e.g., Transfer reference, Check number..."
               disabled={loading}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="notes">Notes (Optional)</label>
+            <label htmlFor="notes">Additional Notes</label>
             <textarea
               id="notes"
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              placeholder="Additional notes about this payment"
+              placeholder="Any additional information about this payment..."
               rows="3"
               disabled={loading}
             />
@@ -430,7 +511,88 @@ const MarkPaidModal = ({ payment, onConfirm, onCancel }) => {
               className="confirm-btn"
               disabled={loading}
             >
-              {loading ? 'Processing...' : 'Mark as Paid'}
+              {loading ? 'Submitting...' : 'Submit Payment Proof'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Confirm Payment Modal Component (Admin)
+const ConfirmPaymentModal = ({ payment, onConfirm, onCancel }) => {
+  const [adminNotes, setAdminNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await onConfirm(adminNotes);
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-container">
+        <div className="modal-header">
+          <h3>✅ Confirm Payment Receipt</h3>
+          <button onClick={onCancel} className="close-btn">×</button>
+        </div>
+
+        <div className="payment-details">
+          <h4>Payment Submission Details</h4>
+          <p><strong>Resident:</strong> {payment.resident?.name}</p>
+          <p><strong>Amount:</strong> {payment.amount} MAD</p>
+          <p><strong>Period:</strong> {payment.period}</p>
+          
+          <hr />
+          
+          <p><strong>Payment Method:</strong> {payment.paymentSubmission?.paymentMethod?.replace('_', ' ')}</p>
+          <p><strong>Payment Date:</strong> {new Date(payment.paymentSubmission?.paymentDate).toLocaleDateString()}</p>
+          {payment.paymentSubmission?.reference && (
+            <p><strong>Reference:</strong> {payment.paymentSubmission.reference}</p>
+          )}
+          {payment.paymentSubmission?.notes && (
+            <p><strong>Tenant Notes:</strong> {payment.paymentSubmission.notes}</p>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="confirm-payment-form">
+          <div className="form-group">
+            <label htmlFor="adminNotes">Admin Notes (Optional)</label>
+            <textarea
+              id="adminNotes"
+              name="adminNotes"
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              placeholder="Add any notes about this payment confirmation..."
+              rows="3"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button 
+              type="button" 
+              onClick={onCancel}
+              className="cancel-btn"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="confirm-btn"
+              disabled={loading}
+            >
+              {loading ? 'Confirming...' : 'Confirm Payment Received'}
             </button>
           </div>
         </form>
