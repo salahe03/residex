@@ -179,5 +179,80 @@ export const paymentService = {
       console.error('Error fetching payment statistics:', error);
       throw error;
     }
-  }
+  },
+
+  // Submit payment proof (tenant)
+  submitPayment: async (paymentId, paymentDetails) => {
+    try {
+      console.log('Submitting payment proof:', paymentId);
+      
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/submit`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(paymentDetails),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit payment');
+      }
+      
+      console.log('Payment submitted successfully');
+      return data;
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+      throw error;
+    }
+  },
+
+  // Confirm payment (admin only)
+  confirmPayment: async (paymentId, adminNotes = '') => {
+    try {
+      console.log('Confirming payment:', paymentId);
+      
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/confirm`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ adminNotes }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to confirm payment');
+      }
+      
+      console.log('Payment confirmed successfully');
+      return data;
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      throw error;
+    }
+  },
+
+  // Reject payment (admin only)
+  rejectPayment: async (paymentId, adminNotes = '') => {
+    try {
+      console.log('Rejecting payment:', paymentId);
+      
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/reject`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ adminNotes }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reject payment');
+      }
+      
+      console.log('Payment rejected successfully');
+      return data;
+    } catch (error) {
+      console.error('Error rejecting payment:', error);
+      throw error;
+    }
+  },
 };
