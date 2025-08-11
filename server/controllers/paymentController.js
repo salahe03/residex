@@ -75,7 +75,6 @@ const getUserPayments = async (req, res) => {
     
     const payments = await Payment.find({ resident: userId })
       .populate('resident', 'name email apartmentNumber')
-      .populate('processedBy', 'name email')
       .sort({ dueDate: -1 });
     
     console.log(`2. Found ${payments.length} payments for user`);
@@ -102,7 +101,6 @@ const getAllPayments = async (req, res) => {
     
     const payments = await Payment.find()
       .populate('resident', 'name email apartmentNumber')
-      .populate('processedBy', 'name email')
       .sort({ dueDate: -1 });
     
     console.log(`2. Found ${payments.length} total payments`);
@@ -368,6 +366,91 @@ const rejectPayment = async (req, res) => {
   }
 };
 
+// PUT /api/payments/:id - Update payment (Admin only)
+const updatePayment = async (req, res) => {
+  try {
+    console.log('1. Updating payment:', req.params.id);
+    
+    const paymentId = req.params.id;
+    const { amount, description, period, dueDate, type } = req.body;
+    
+    // Validate required fields
+    if (!amount || !description || !period || !dueDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount, description, period, and due date are required'
+      });
+    }
+    
+    const payment = await Payment.findByIdAndUpdate(
+      paymentId,
+      {
+        amount: parseFloat(amount),
+        description: description.trim(),
+        period: period.trim(),
+        dueDate: new Date(dueDate),
+        type: type || 'monthly_charge'
+      },
+      { new: true, runValidators: true }
+    ).populate('resident', 'name email apartmentNumber');
+    
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        error: 'Payment not found'
+      });
+    }
+    
+    console.log('2. Payment updated successfully');
+    
+    res.json({
+      success: true,
+      message: 'Payment updated successfully',
+      data: payment
+    });
+    
+  } catch (error) {
+    console.error('Error updating payment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error while updating payment'
+    });
+  }
+};
+
+// DELETE /api/payments/:id - Delete payment (Admin only)
+const deletePayment = async (req, res) => {
+  try {
+    console.log('1. Deleting payment:', req.params.id);
+    
+    const paymentId = req.params.id;
+    
+    const payment = await Payment.findByIdAndDelete(paymentId);
+    
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        error: 'Payment not found'
+      });
+    }
+    
+    console.log('2. Payment deleted successfully');
+    
+    res.json({
+      success: true,
+      message: 'Payment deleted successfully',
+      data: { deletedPaymentId: paymentId }
+    });
+    
+  } catch (error) {
+    console.error('Error deleting payment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error while deleting payment'
+    });
+  }
+};
+
 // Remove the old markPaymentPaid function and replace with these new ones
 module.exports = {
   getAllPayments,
@@ -376,7 +459,7 @@ module.exports = {
   submitPayment,    // NEW: For tenants
   confirmPayment,   // NEW: For admin
   rejectPayment,    // NEW: For admin
-  updatePayment,
-  deletePayment,
+  updatePayment,    // NOW DEFINED
+  deletePayment,    // NOW DEFINED
   getPaymentStats
 };

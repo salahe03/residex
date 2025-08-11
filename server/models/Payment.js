@@ -84,6 +84,26 @@ const paymentSchema = new mongoose.Schema({
       trim: true,
       default: null
     }
+  },
+  
+  // MISSING FIELDS - Add these for backward compatibility and controller usage
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  
+  // Legacy payment date field (for backward compatibility)
+  paymentDate: {
+    type: Date,
+    default: null
+  },
+  
+  // Legacy payment method field (for backward compatibility) 
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'bank_transfer', 'check', 'other'],
+    default: null
   }
 }, {
   timestamps: true
