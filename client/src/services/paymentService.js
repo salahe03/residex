@@ -58,7 +58,7 @@ export const paymentService = {
     }
   },
 
-  // Create bulk payments for all residents (admin only)
+  // Create bulk/individual payments (admin only)
   createBulkPayments: async (paymentData) => {
     try {
       console.log('Creating bulk payments:', paymentData);
@@ -79,31 +79,6 @@ export const paymentService = {
       return data;
     } catch (error) {
       console.error('Error creating bulk payments:', error);
-      throw error;
-    }
-  },
-
-  // Mark payment as paid (admin only)
-  markPaymentPaid: async (paymentId, paymentDetails) => {
-    try {
-      console.log('Marking payment as paid:', paymentId);
-      
-      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/mark-paid`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(paymentDetails),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to mark payment as paid');
-      }
-      
-      console.log('Payment marked as paid successfully');
-      return data;
-    } catch (error) {
-      console.error('Error marking payment as paid:', error);
       throw error;
     }
   },
@@ -157,7 +132,7 @@ export const paymentService = {
     }
   },
 
-  // Get payment statistics (admin only)
+  // Stats + new flow
   getPaymentStats: async () => {
     try {
       console.log('Fetching payment statistics...');
