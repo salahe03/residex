@@ -58,7 +58,7 @@ export const paymentService = {
     }
   },
 
-  // Create bulk payments for all residents (admin only)
+  // Create bulk/individual payments (admin only)
   createBulkPayments: async (paymentData) => {
     try {
       console.log('Creating bulk payments:', paymentData);
@@ -79,31 +79,6 @@ export const paymentService = {
       return data;
     } catch (error) {
       console.error('Error creating bulk payments:', error);
-      throw error;
-    }
-  },
-
-  // Mark payment as paid (admin only)
-  markPaymentPaid: async (paymentId, paymentDetails) => {
-    try {
-      console.log('Marking payment as paid:', paymentId);
-      
-      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/mark-paid`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(paymentDetails),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to mark payment as paid');
-      }
-      
-      console.log('Payment marked as paid successfully');
-      return data;
-    } catch (error) {
-      console.error('Error marking payment as paid:', error);
       throw error;
     }
   },
@@ -157,7 +132,7 @@ export const paymentService = {
     }
   },
 
-  // Get payment statistics (admin only)
+  // Stats + new flow
   getPaymentStats: async () => {
     try {
       console.log('Fetching payment statistics...');
@@ -179,5 +154,80 @@ export const paymentService = {
       console.error('Error fetching payment statistics:', error);
       throw error;
     }
-  }
+  },
+
+  // Submit payment proof (tenant)
+  submitPayment: async (paymentId, paymentDetails) => {
+    try {
+      console.log('Submitting payment proof:', paymentId);
+      
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/submit`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(paymentDetails),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit payment');
+      }
+      
+      console.log('Payment submitted successfully');
+      return data;
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+      throw error;
+    }
+  },
+
+  // Confirm payment (admin only)
+  confirmPayment: async (paymentId, adminNotes = '') => {
+    try {
+      console.log('Confirming payment:', paymentId);
+      
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/confirm`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ adminNotes }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to confirm payment');
+      }
+      
+      console.log('Payment confirmed successfully');
+      return data;
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      throw error;
+    }
+  },
+
+  // Reject payment (admin only)
+  rejectPayment: async (paymentId, adminNotes = '') => {
+    try {
+      console.log('Rejecting payment:', paymentId);
+      
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/reject`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ adminNotes }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reject payment');
+      }
+      
+      console.log('Payment rejected successfully');
+      return data;
+    } catch (error) {
+      console.error('Error rejecting payment:', error);
+      throw error;
+    }
+  },
 };
