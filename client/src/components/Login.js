@@ -52,7 +52,7 @@ const Login = ({ onSwitchToRegister }) => {
           <p>Sign in to your Residex account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form" autoComplete="off">
           {/* Only show error for non-inactive account errors */}
           {error && !error.includes('pending') && (
             <div className="error-message">
@@ -71,6 +71,7 @@ const Login = ({ onSwitchToRegister }) => {
               placeholder="Enter your email"
               required
               disabled={loading}
+              autoComplete="off"
             />
           </div>
 
@@ -86,6 +87,7 @@ const Login = ({ onSwitchToRegister }) => {
                 placeholder="Enter your password"
                 required
                 disabled={loading}
+                autoComplete="new-password"
               />
               <button
                 type="button"

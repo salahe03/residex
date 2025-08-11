@@ -13,8 +13,8 @@ const Register = ({ onSwitchToLogin }) => {
     apartmentNumber: '',
     role: 'tenant' // Default role
   });
-
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [showValidation, setShowValidation] = useState(false); // NEW
   const { register, loading, error, clearError } = useAuth();
 
   // Handle input changes
@@ -57,15 +57,18 @@ const Register = ({ onSwitchToLogin }) => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate form
-    const validationError = validateForm();
-    if (validationError) {
-      // Scroll to the validation error
-      window.scrollTo({ 
-        top: document.querySelector('.validation-error').offsetTop - 100, 
-        behavior: 'smooth' 
-      });
+
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      setShowValidation(true); // show errors only after first submit attempt
+      // scroll to error after DOM updates
+      setTimeout(() => {
+        const el = document.querySelector('.validation-error');
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      }, 0);
       return;
     }
 
@@ -90,7 +93,8 @@ const Register = ({ onSwitchToLogin }) => {
     }
   };
 
-  const validationError = validateForm();
+  // Only compute and show validation once user attempted submit
+  const validationError = showValidation ? validateForm() : null;
 
   // Show success message for pending users
   if (registrationSuccess) {
@@ -144,7 +148,7 @@ const Register = ({ onSwitchToLogin }) => {
           <p>Join Residex Building Management</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form" autoComplete="off">
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
@@ -158,6 +162,7 @@ const Register = ({ onSwitchToLogin }) => {
               onChange={handleChange}
               disabled={loading}
               required
+              autoComplete="off"
             />
           </div>
 
@@ -172,6 +177,7 @@ const Register = ({ onSwitchToLogin }) => {
               onChange={handleChange}
               disabled={loading}
               required
+              autoComplete="off"
             />
           </div>
 
@@ -187,6 +193,7 @@ const Register = ({ onSwitchToLogin }) => {
                 onChange={handleChange}
                 disabled={loading}
                 required
+                autoComplete="off"
               />
             </div>
 
@@ -201,6 +208,7 @@ const Register = ({ onSwitchToLogin }) => {
                 onChange={handleChange}
                 disabled={loading}
                 required
+                autoComplete="off"
               />
             </div>
           </div>
@@ -230,6 +238,7 @@ const Register = ({ onSwitchToLogin }) => {
               onChange={handleChange}
               disabled={loading}
               required
+              autoComplete="new-password"
             />
           </div>
 
@@ -244,6 +253,7 @@ const Register = ({ onSwitchToLogin }) => {
               onChange={handleChange}
               disabled={loading}
               required
+              autoComplete="new-password"
             />
           </div>
 
@@ -261,7 +271,7 @@ const Register = ({ onSwitchToLogin }) => {
           <button 
             type="submit" 
             className="auth-button"
-            disabled={loading || validationError}
+            disabled={loading || (showValidation && !!validationError)}  // avoid disabling before submit
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
