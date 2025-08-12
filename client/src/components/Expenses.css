@@ -95,6 +95,26 @@
   cursor: pointer;
 }
 
+.controls-right {
+  display: flex;
+  gap: 8px;
+}
+
+.export-btn {
+  background: #f8f9fa;
+  color: #333;
+  border: 2px solid #e1e5e9;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.export-btn:hover {
+  background: #eef2ff;
+  border-color: #cfd8ff;
+}
+
 /* Table */
 .expenses-table-container {
   background: #fff;
