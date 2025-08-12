@@ -7,6 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const paymentRoutes = require('./routes/payments'); // Add this line
+const expensesRoutes = require('./routes/expenses');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use(express.json()); // converts incoming json payloads to js objects
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes); // new payment route
+app.use('/api/expenses', expensesRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
