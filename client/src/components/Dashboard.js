@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import ResidentManagement from './ResidentManagement';
-import PaymentManagement from './PaymentManagement'; // Add this import
+import PaymentManagement from './PaymentManagement';
+import Expenses from './Expenses';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -23,10 +24,19 @@ const Dashboard = () => {
     switch (currentView) {
       case 'resident-management':
         return <ResidentManagement />;
-      
       case 'payments':
-        return <PaymentManagement />; // Add this case
-      
+        return <PaymentManagement />;
+      case 'expenses':
+        return isAdmin ? (
+          <Expenses />
+        ) : (
+          <div className="dashboard-content">
+            <div className="welcome-card">
+              <h3>Unauthorized</h3>
+              <p>You do not have access to Expenses.</p>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="dashboard-content">
@@ -38,7 +48,7 @@ const Dashboard = () => {
                 <p><strong>Role:</strong> {user.role}</p>
                 <p><strong>User ID:</strong> {user.id}</p>
               </div>
-              
+
               {isAdmin && (
                 <div className="admin-notice">
                   <h3>Admin Access</h3>
@@ -61,14 +71,14 @@ const Dashboard = () => {
                   <span className="status-complete">✅ Complete</span>
                 </div>
                 <div className="stat-item">
-                  <h4>Payment Management</h4> {/* Update this */}
+                  <h4>Payment Management</h4>
                   <p>Track payments and create bulk charges</p>
-                  <span className="status-complete">✅ Complete</span> {/* Update this */}
+                  <span className="status-complete">✅ Complete</span>
                 </div>
                 <div className="stat-item">
                   <h4>Expense Tracking</h4>
                   <p>Monitor building expenses and receipts</p>
-                  <span className="status-pending">⏳ Coming Soon</span>
+                  <span className="status-complete">✅ Complete</span>
                 </div>
               </div>
             </div>
@@ -125,15 +135,17 @@ const Dashboard = () => {
               </button>
             </li>
             
-            <li>
-              <button 
-                className={`nav-item ${currentView === 'expenses' ? 'active' : ''}`}
-                onClick={() => handleNavClick('expenses')}
-              >
-                <span className="nav-icon">📊</span>
-                Expenses
-              </button>
-            </li>
+            {isAdmin && (
+              <li>
+                <button
+                  className={`nav-item ${currentView === 'expenses' ? 'active' : ''}`}
+                  onClick={() => handleNavClick('expenses')}
+                >
+                  <span className="nav-icon">📊</span>
+                  Expenses
+                </button>
+              </li>
+            )}
             
             <li>
               <button 
