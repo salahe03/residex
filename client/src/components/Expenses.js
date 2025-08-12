@@ -17,6 +17,7 @@ const categories = [
 ];
 
 const fmtMAD = (n) => `${Number(n || 0).toFixed(2)} MAD`;
+const fmtDate = (d) => new Date(d).toISOString().split('T')[0];
 
 const Expenses = () => {
   const { isAdmin } = useAuth();
@@ -74,6 +75,43 @@ const Expenses = () => {
     return `${entries[0][0]} (${fmtMAD(entries[0][1])})`;
   }, [stats]);
 
+  // ADD: total for currently shown list
+  const shownTotal = useMemo(
+    () => expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0),
+    [expenses]
+  );
+
+  // ADD: CSV export for the current filtered list
+  const exportCsv = useCallback(() => {
+    const headers = ['Date','Description','Category','Vendor','Amount (MAD)','Notes','Receipt URL','Created By'];
+    const escape = (val) => {
+      const v = val == null ? '' : String(val);
+      return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    };
+    const rows = expenses.map(e => [
+      fmtDate(e.date),
+      e.description || '',
+      e.category || '',
+      e.vendor || '',
+      Number(e.amount || 0).toFixed(2),
+      e.notes || '',
+      e.receiptUrl || '',
+      e.createdBy ? `${e.createdBy.name} <${e.createdBy.email}>` : ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeMonth = typeof month === 'string' ? month : new Date().toISOString().slice(0,7);
+    const safeCat = category || 'all';
+    a.href = url;
+    a.download = `expenses_${safeMonth}_${safeCat}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [expenses, month, category]);
+
   const handleCreate = () => { setEditing(null); setShowForm(true); };
   const handleEdit = (exp) => { setEditing(exp); setShowForm(true); };
   const handleDelete = async (exp) => {
@@ -121,7 +159,12 @@ const Expenses = () => {
             {categories.map(c => (<option key={c.value} value={c.value}>{c.label}</option>))}
           </select>
         </div>
-        <button onClick={handleCreate} className="add-expense-btn">+ Add Expense</button>
+
+        {/* ADD: right-side buttons group */}
+        <div className="controls-right">
+          <button onClick={exportCsv} className="export-btn" title="Export current list to CSV">Export CSV</button>
+          <button onClick={handleCreate} className="add-expense-btn">+ Add Expense</button>
+        </div>
       </div>
 
       {error && <div className="error-message">❌ {error}</div>}
@@ -155,7 +198,11 @@ const Expenses = () => {
         </div>
       )}
 
-      {expenses.length > 0 && (<div className="results-summary">Showing {expenses.length} expenses</div>)}
+      {expenses.length > 0 && (
+        <div className="results-summary">
+          Showing {expenses.length} expenses • Total: {fmtMAD(shownTotal)}
+        </div>
+      )}
     </div>
   );
 };
