@@ -36,6 +36,15 @@ const Expenses = () => {
   const year = useMemo(() => parseInt(month.slice(0, 4), 10), [month]);
 
   const loadData = useCallback(async () => {
+    // Prevent admin-only calls when not admin
+    if (!isAdmin) {
+      setLoading(false);
+      setError('');
+      setExpenses([]);
+      setStats(null);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -50,14 +59,13 @@ const Expenses = () => {
     } finally {
       setLoading(false);
     }
-  }, [month, category, searchTerm, year]);
+  }, [isAdmin, month, category, searchTerm, year]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  if (!isAdmin) return <div className="expenses-container"><div className="error-message">Unauthorized</div></div>;
-
+  // Move all hooks above; derive memo after hooks
   const topCategory = useMemo(() => {
     if (!stats?.categoryTotals) return '-';
     const entries = Object.entries(stats.categoryTotals);
