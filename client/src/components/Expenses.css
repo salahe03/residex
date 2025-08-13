@@ -95,11 +95,13 @@
   cursor: pointer;
 }
 
+/* Right-side controls */
 .controls-right {
   display: flex;
   gap: 8px;
 }
 
+/* Export button */
 .export-btn {
   background: #f8f9fa;
   color: #333;
@@ -209,6 +211,45 @@
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
+
+/* Allocated visuals */
+.alloc-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #3f51b5;
+}
+.alloc-badge.unpaid { background: #ffebee; color: #c62828; }
+.alloc-badge.partially_paid { background: #fff8e1; color: #b26a00; }
+.alloc-badge.paid { background: #e8f5e9; color: #2e7d32; }
+
+.alloc-progress {
+  height: 6px;
+  background: #f1f3f4;
+  border-radius: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.alloc-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  width: 0%;
+}
+
+/* Allocate action */
+.allocate-btn {
+  background: none;
+  border: 1px solid #e1e5e9;
+  padding: 8px 12px;
+  margin: 0 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.allocate-btn:hover { background: #f3e8ff; border-color: #7e57c2; }
 
 /* Responsive */
 @media (max-width: 1024px) {
