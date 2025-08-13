@@ -58,7 +58,7 @@ const Expenses = () => {
       const [list, s, ov] = await Promise.all([
         expenseService.getExpenses({ month, category, q: searchTerm }),
         expenseService.getStats(year),
-        expenseService.getFinanceOverview(month)
+        expenseService.getFinanceOverview() // CHANGED: overall (not month-scoped)
       ]);
       setExpenses(list.data || []);
       setStats(s.data);
@@ -186,10 +186,12 @@ const Expenses = () => {
           <div className="stat-card"><span className="stat-number">{fmtMAD(stats?.currentMonthTotal || 0)}</span><span className="stat-label">This Month</span></div>
           <div className="stat-card"><span className="stat-number">{fmtMAD(stats?.grandTotal || 0)}</span><span className="stat-label">Year To Date</span></div>
           <div className="stat-card"><span className="stat-number">{topCategory}</span><span className="stat-label">Top Category</span></div>
-          <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.paidRevenue || 0)}</span><span className="stat-label">Collected (Confirmed)</span></div>
-          <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.allocatedToExpenses || 0)}</span><span className="stat-label">Allocated</span></div>
+
+          {/* CHANGED: make finance cards clearly all-time */}
+          <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.paidRevenue || 0)}</span><span className="stat-label">Collected (All‑Time)</span></div>
+          <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.allocatedToExpenses || 0)}</span><span className="stat-label">Allocated (All‑Time)</span></div>
           <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.fundBalance || 0)}</span><span className="stat-label">Fund Balance</span></div>
-          <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.outstandingExpenses || 0)}</span><span className="stat-label">Outstanding</span></div>
+          <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.outstandingExpenses || 0)}</span><span className="stat-label">Outstanding (All‑Time)</span></div>
         </div>
       </div>
 
