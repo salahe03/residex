@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
@@ -19,6 +19,7 @@ export const expenseService = {
     if (!res.ok) throw new Error(data.error || 'Failed to fetch expenses');
     return data;
   },
+
   createExpense: async (expense) => {
     const res = await fetch(`${API_BASE_URL}/expenses`, {
       method: 'POST',
@@ -29,6 +30,7 @@ export const expenseService = {
     if (!res.ok) throw new Error(data.error || 'Failed to create expense');
     return data;
   },
+
   updateExpense: async (id, expense) => {
     const res = await fetch(`${API_BASE_URL}/expenses/${id}`, {
       method: 'PUT',
@@ -39,6 +41,7 @@ export const expenseService = {
     if (!res.ok) throw new Error(data.error || 'Failed to update expense');
     return data;
   },
+
   deleteExpense: async (id) => {
     const res = await fetch(`${API_BASE_URL}/expenses/${id}`, {
       method: 'DELETE',
@@ -48,12 +51,45 @@ export const expenseService = {
     if (!res.ok) throw new Error(data.error || 'Failed to delete expense');
     return data;
   },
+
   getStats: async (year) => {
     const url = new URL(`${API_BASE_URL}/expenses/stats`);
     if (year) url.searchParams.append('year', year);
     const res = await fetch(url.toString(), { headers: getAuthHeaders() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch expense stats');
+    return data;
+  },
+
+  // NEW: finance overview (optional month filter)
+  getFinanceOverview: async (month) => {
+    const url = new URL(`${API_BASE_URL}/expenses/overview`);
+    if (month) url.searchParams.append('month', month);
+    const res = await fetch(url.toString(), { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch finance overview');
+    return data;
+  },
+
+  // NEW: allocations
+  allocateExpense: async (id, payload) => {
+    const res = await fetch(`${API_BASE_URL}/expenses/${id}/allocate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to allocate funds');
+    return data;
+  },
+
+  deleteAllocation: async (id, allocId) => {
+    const res = await fetch(`${API_BASE_URL}/expenses/${id}/allocations/${allocId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete allocation');
     return data;
   }
 };
