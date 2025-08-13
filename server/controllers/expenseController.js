@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const Payment = require('../models/Payment');
 
 // GET /api/expenses?month=YYYY-MM&category=&q=
 const getExpenses = async (req, res) => {
@@ -16,7 +17,8 @@ const getExpenses = async (req, res) => {
 
     const expenses = await Expense.find(query)
       .sort({ date: -1 })
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'name email')
+      .populate('allocations.allocatedBy', 'name email');
 
     res.json({ success: true, count: expenses.length, data: expenses });
   } catch (err) {
@@ -68,7 +70,7 @@ const updateExpense = async (req, res) => {
         receiptUrl: receiptUrl.trim()
       },
       { new: true, runValidators: true }
-    ).populate('createdBy', 'name email');
+    ).populate('createdBy', 'name email').populate('allocations.allocatedBy', 'name email');
 
     if (!expense) return res.status(404).json({ success: false, error: 'Expense not found' });
     res.json({ success: true, data: expense });
@@ -140,10 +142,144 @@ const getExpenseStats = async (req, res) => {
   }
 };
 
+// Helper: finance overview (optional month=YYYY-MM filter)
+const computeFinanceOverview = async (month) => {
+  let dateRange = {};
+  if (month) {
+    const [y, m] = month.split('-').map(n => parseInt(n, 10));
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 0, 23, 59, 59, 999);
+    dateRange = { $gte: start, $lte: end };
+  }
+
+  // Confirmed payments revenue
+  const paidMatch = { status: 'paid' };
+  if (month) paidMatch['confirmation.confirmedAt'] = dateRange;
+
+  const [paidAgg] = await Payment.aggregate([
+    { $match: paidMatch },
+    { $group: { _id: null, total: { $sum: '$amount' } } }
+  ]);
+
+  // Total expenses (by expense date)
+  const expenseMatch = {};
+  if (month) expenseMatch.date = dateRange;
+
+  const [expAgg] = await Expense.aggregate([
+    { $match: expenseMatch },
+    { $group: { _id: null, total: { $sum: '$amount' } } }
+  ]);
+
+  // Allocations (by allocation date)
+  const allocMatch = {};
+  if (month) allocMatch['allocations.allocatedAt'] = dateRange;
+
+  const [allocAgg] = await Expense.aggregate([
+    { $unwind: { path: '$allocations', preserveNullAndEmptyArrays: false } },
+    { $match: Object.keys(allocMatch).length ? allocMatch : {} },
+    { $group: { _id: null, total: { $sum: '$allocations.amount' } } }
+  ]);
+
+  const paidRevenue = paidAgg?.total || 0;
+  const totalExpenses = expAgg?.total || 0;
+  const allocatedToExpenses = allocAgg?.total || 0;
+  const fundBalance = paidRevenue - allocatedToExpenses;
+  const outstandingExpenses = totalExpenses - allocatedToExpenses;
+
+  return { paidRevenue, totalExpenses, allocatedToExpenses, fundBalance, outstandingExpenses };
+};
+
+// POST /api/expenses/:id/allocate { amount, note }
+const allocateExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, note = '' } = req.body;
+    const amt = parseFloat(amount);
+    if (!amt || amt <= 0) return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
+
+    const expense = await Expense.findById(id);
+    if (!expense) return res.status(404).json({ success: false, error: 'Expense not found' });
+
+    const allocatedSoFar = (expense.allocations || []).reduce((s, a) => s + (a.amount || 0), 0);
+    const remainingForExpense = Math.max(0, Number(expense.amount || 0) - allocatedSoFar);
+
+    // Use overall fund (not month-scoped) to keep it simple
+    const { fundBalance } = await computeFinanceOverview();
+    const maxAlloc = Math.min(remainingForExpense, fundBalance);
+    if (amt > maxAlloc) {
+      return res.status(400).json({
+        success: false,
+        error: `Insufficient funds or exceeds expense remaining. Max allocatable: ${maxAlloc.toFixed(2)}`
+      });
+    }
+
+    expense.allocations.push({
+      amount: amt,
+      allocatedBy: req.user._id,
+      note
+    });
+
+    await expense.save();
+
+    const updated = await Expense.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('allocations.allocatedBy', 'name email');
+
+    const overview = await computeFinanceOverview();
+    res.json({ success: true, message: 'Allocation applied', data: updated, overview });
+  } catch (err) {
+    console.error('Error allocating expense:', err);
+    res.status(500).json({ success: false, error: 'Server error while allocating expense' });
+  }
+};
+
+// DELETE /api/expenses/:id/allocations/:allocId
+const deleteAllocation = async (req, res) => {
+  try {
+    const { id, allocId } = req.params;
+
+    const expense = await Expense.findById(id);
+    if (!expense) return res.status(404).json({ success: false, error: 'Expense not found' });
+
+    const before = expense.allocations.length;
+    expense.allocations = expense.allocations.filter(a => String(a._id) !== String(allocId));
+    if (expense.allocations.length === before) {
+      return res.status(404).json({ success: false, error: 'Allocation not found' });
+    }
+
+    await expense.save();
+
+    const updated = await Expense.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('allocations.allocatedBy', 'name email');
+
+    const overview = await computeFinanceOverview();
+    res.json({ success: true, message: 'Allocation removed', data: updated, overview });
+  } catch (err) {
+    console.error('Error deleting allocation:', err);
+    res.status(500).json({ success: false, error: 'Server error while deleting allocation' });
+  }
+};
+
+// GET /api/expenses/overview?month=YYYY-MM
+const getFinanceOverview = async (req, res) => {
+  try {
+    const { month } = req.query;
+    const overview = await computeFinanceOverview(month);
+    res.json({ success: true, data: overview });
+  } catch (err) {
+    console.error('Error building finance overview:', err);
+    res.status(500).json({ success: false, error: 'Server error while building finance overview' });
+  }
+};
+
 module.exports = {
   getExpenses,
   createExpense,
   updateExpense,
   deleteExpense,
-  getExpenseStats
+  getExpenseStats,
+  allocateExpense,
+  deleteAllocation,
+  getFinanceOverview
 };
