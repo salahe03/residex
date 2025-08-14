@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { expenseService } from '../services/expenseService';
+import { useToast } from '../contexts/ToastContext';
 import './Expenses.css';
 
 const categories = [
@@ -371,6 +372,7 @@ const ExpenseForm = ({ initial, onCancel, onSaved }) => {
 };
 
 const AllocateModal = ({ expense, overview, onCancel, onSaved }) => {
+  const { showSuccess } = useToast();
   const allocated = (expense.allocations || []).reduce((s,a)=>s + (a.amount||0), 0);
   const remainingForExpense = Math.max(0, Number(expense.amount||0) - allocated);
   const fundBalance = Number(overview?.fundBalance || 0);
@@ -395,6 +397,7 @@ const AllocateModal = ({ expense, overview, onCancel, onSaved }) => {
       setLoading(true);
       setErr('');
       await expenseService.allocateExpense(expense._id, { amount: amt, note: form.note });
+      showSuccess(`Successfully allocated ${amt.toFixed(2)} MAD to "${expense.description}"`);
       await onSaved();
     } catch (e) {
       setErr(e.message);
