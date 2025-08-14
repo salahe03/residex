@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
 import './PaymentManagement.css';
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
+  const { showSuccess } = useToast();
   
   // Shared states
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,9 @@ const PaymentManagement = () => {
       setSelectedPayment(null);
       loadData(); // Refresh data
       
+      // Add success toast for tenant payment submission
+      showSuccess(`Payment proof submitted successfully! Your ${selectedPayment.description} payment is now awaiting admin confirmation.`);
+      
       console.log('Payment submitted successfully');
     } catch (error) {
       console.error('Error submitting payment:', error);
@@ -92,6 +97,9 @@ const PaymentManagement = () => {
       setShowConfirmPayment(false);
       setSelectedPayment(null);
       loadData(); // Refresh data
+      
+      // Add success toast for admin payment confirmation
+      showSuccess(`Payment confirmed! ${selectedPayment.amount} MAD collected from ${selectedPayment.resident?.name} for ${selectedPayment.description}.`);
       
       console.log('Payment confirmed successfully');
     } catch (error) {
