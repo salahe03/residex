@@ -57,31 +57,7 @@ const Dashboard = () => {
               )}
             </div>
 
-            <div className="stats-overview">
-              <h3>Quick Overview</h3>
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <h4>User Approval System</h4>
-                  <p>New registrations require admin approval</p>
-                  <span className="status-complete">✅ Complete</span>
-                </div>
-                <div className="stat-item">
-                  <h4>Resident Management</h4>
-                  <p>Complete CRUD operations for residents</p>
-                  <span className="status-complete">✅ Complete</span>
-                </div>
-                <div className="stat-item">
-                  <h4>Payment Management</h4>
-                  <p>Track payments and create bulk charges</p>
-                  <span className="status-complete">✅ Complete</span>
-                </div>
-                <div className="stat-item">
-                  <h4>Expense Tracking</h4>
-                  <p>Monitor building expenses and receipts</p>
-                  <span className="status-complete">✅ Complete</span>
-                </div>
-              </div>
-            </div>
+           
           </div>
         );
     }
