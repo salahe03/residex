@@ -581,6 +581,19 @@
   transform: none;
 }
 
+/* Rejection Status Styles */
+.status-rejected {
+  background-color: #dc3545;
+  color: white;
+}
+
+.rejection-reason {
+  font-size: 0.8em;
+  color: #dc3545;
+  font-style: italic;
+  margin-top: 2px;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {

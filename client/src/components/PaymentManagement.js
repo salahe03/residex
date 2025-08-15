@@ -163,6 +163,8 @@ const PaymentManagement = () => {
         return 'status-pending';
       case 'overdue':
         return 'status-overdue';
+      case 'rejected':
+        return 'status-rejected';
       default:
         return 'status-pending';
     }
@@ -259,6 +261,7 @@ const PaymentManagement = () => {
             <option value="submitted">Submitted</option>
             <option value="paid">Paid</option>
             <option value="overdue">Overdue</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
         
@@ -324,6 +327,7 @@ const PaymentManagement = () => {
                   <td className="status-cell">
                     <span className={`status-badge ${getStatusBadge(payment.status)}`}>
                       {payment.status === 'submitted' ? 'Awaiting Confirmation' : 
+                       payment.status === 'rejected' ? 'Rejected' :
                        payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                     </span>
                     {payment.confirmation?.confirmedAt && (
@@ -332,17 +336,20 @@ const PaymentManagement = () => {
                     {payment.paymentSubmission?.submittedAt && (
                       <div className="payment-date">Submitted: {formatDate(payment.paymentSubmission.submittedAt)}</div>
                     )}
+                    {payment.status === 'rejected' && payment.confirmation?.adminNotes && (
+                      <div className="rejection-reason">Reason: {payment.confirmation.adminNotes}</div>
+                    )}
                   </td>
                   <td className="actions-cell">
                     {/* Tenant Actions */}
-                    {!isAdmin && (payment.status === 'pending' || payment.status === 'overdue') && (
+                    {!isAdmin && (payment.status === 'pending' || payment.status === 'overdue' || payment.status === 'rejected') && (
                       <button
                         onClick={() => handleSubmitPayment(payment)}
                         className="pay-btn"
                         disabled={processingPayment === payment._id}
                         title="Submit payment proof"
                       >
-                        {processingPayment === payment._id ? '⏳' : '💳 Pay'}
+                        {processingPayment === payment._id ? '⏳' : payment.status === 'rejected' ? '🔄 Resubmit' : '💳 Pay'}
                       </button>
                     )}
                     
