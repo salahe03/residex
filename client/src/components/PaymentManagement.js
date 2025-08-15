@@ -7,7 +7,7 @@ import './PaymentManagement.css';
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
   
   // Shared states
   const [loading, setLoading] = useState(true);
@@ -118,6 +118,10 @@ const PaymentManagement = () => {
         await paymentService.rejectPayment(payment._id, 'Payment submission rejected by admin');
         
         loadData(); // Refresh data
+        
+        // Add error toast for payment rejection
+        showError(`Payment rejected! ${payment.resident?.name}'s payment for ${payment.description} has been declined.`);
+        
         console.log('Payment rejected successfully');
       } catch (error) {
         console.error('Error rejecting payment:', error);
@@ -132,6 +136,9 @@ const PaymentManagement = () => {
   const handleCreateBulkSuccess = () => {
     setShowCreateBulk(false);
     loadData(); // Refresh data
+    
+    // Add success toast for payment creation
+    showSuccess('New payments created successfully! Residents have been notified of their payment obligations.');
   };
 
   // Filter payments based on search and status
