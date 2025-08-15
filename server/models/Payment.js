@@ -37,7 +37,7 @@ const paymentSchema = new mongoose.Schema({
   // Payment status - ENHANCED
   status: {
     type: String,
-    enum: ['pending', 'submitted', 'paid', 'overdue'], // Added 'submitted'
+    enum: ['pending', 'submitted', 'paid', 'overdue', 'rejected'], // Added 'rejected'
     default: 'pending'
   },
   

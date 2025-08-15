@@ -331,7 +331,7 @@ const rejectPayment = async (req, res) => {
     const payment = await Payment.findByIdAndUpdate(
       paymentId,
       {
-        status: 'pending', // Reset to pending
+        status: 'rejected', // Changed from 'pending' to 'rejected'
         'paymentSubmission.submittedAt': null,
         'paymentSubmission.paymentMethod': null,
         'paymentSubmission.paymentDate': null,
@@ -348,7 +348,7 @@ const rejectPayment = async (req, res) => {
         error: 'Payment not found'
       });
     }
-    
+
     console.log('2. Payment submission rejected');
     
     res.json({
