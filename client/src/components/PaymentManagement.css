@@ -594,6 +594,24 @@
   margin-top: 2px;
 }
 
+.rejection-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0;
+  color: #856404;
+}
+
+.rejection-notice p {
+  margin: 4px 0;
+}
+
+.rejection-notice em {
+  color: #dc3545;
+  font-weight: 500;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {
