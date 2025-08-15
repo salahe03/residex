@@ -7,7 +7,7 @@ import './PaymentManagement.css';
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showWarning } = useToast(); // Changed from showError to showWarning
   
   // Shared states
   const [loading, setLoading] = useState(true);
@@ -119,8 +119,8 @@ const PaymentManagement = () => {
         
         loadData(); // Refresh data
         
-        // Add error toast for payment rejection
-        showError(`Payment rejected! ${payment.resident?.name}'s payment for ${payment.description} has been declined.`);
+        // Updated to use warning toast (amber with "!" icon) for payment rejection
+        showWarning(`Payment rejected! ${payment.resident?.name}'s payment for ${payment.description} has been declined and can be resubmitted.`);
         
         console.log('Payment rejected successfully');
       } catch (error) {
