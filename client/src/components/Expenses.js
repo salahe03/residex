@@ -22,6 +22,7 @@ const fmtDate = (d) => new Date(d).toISOString().split('T')[0];
 
 const Expenses = () => {
   const { isAdmin } = useAuth();
+  const { showSuccess, showWarning } = useToast(); // Add showWarning for deletion
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expenses, setExpenses] = useState([]);
@@ -135,8 +136,16 @@ const Expenses = () => {
   const handleCreate = () => { setEditing(null); setShowForm(true); };
   const handleEdit = (exp) => { setEditing(exp); setShowForm(true); };
   const handleDelete = async (exp) => {
-    if (!window.confirm('Delete this expense?')) return;
-    try { setLoading(true); await expenseService.deleteExpense(exp._id); await loadData(); }
+    if (!window.confirm(`Delete expense "${exp.description}"? This cannot be undone.`)) return;
+    try { 
+      setLoading(true); 
+      await expenseService.deleteExpense(exp._id); 
+      
+      // Add amber warning toast for deletion
+      showWarning(`Expense "${exp.description}" has been deleted.`);
+      
+      await loadData(); 
+    }
     catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };
@@ -278,6 +287,8 @@ const Expenses = () => {
 };
 
 const ExpenseForm = ({ initial, onCancel, onSaved }) => {
+  const { showSuccess } = useToast(); // Add toast hook
+  
   const [form, setForm] = useState({
     amount: initial?.amount || '',
     description: initial?.description || '',
@@ -301,8 +312,17 @@ const ExpenseForm = ({ initial, onCancel, onSaved }) => {
     try {
       setLoading(true);
       setErr('');
-      if (initial?._id) await expenseService.updateExpense(initial._id, form);
-      else await expenseService.createExpense(form);
+      
+      if (initial?._id) {
+        await expenseService.updateExpense(initial._id, form);
+        // Add green success toast for update
+        showSuccess(`Expense "${form.description}" updated successfully!`);
+      } else {
+        await expenseService.createExpense(form);
+        // Add green success toast for creation
+        showSuccess(`New expense "${form.description}" created successfully!`);
+      }
+      
       await onSaved();
     } catch (e) {
       setErr(e.message);
