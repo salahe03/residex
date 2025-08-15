@@ -236,8 +236,8 @@ const submitPayment = async (req, res) => {
       });
     }
     
-    // Check if payment is in submittable state
-    if (payment.status !== 'pending' && payment.status !== 'overdue') {
+    // Check if payment is in submittable state - UPDATED to include 'rejected'
+    if (!['pending', 'overdue', 'rejected'].includes(payment.status)) {
       return res.status(400).json({
         success: false,
         error: 'Payment has already been submitted or confirmed'
