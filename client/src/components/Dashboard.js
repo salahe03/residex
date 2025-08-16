@@ -4,6 +4,7 @@ import ResidentManagement from './ResidentManagement';
 import PaymentManagement from './PaymentManagement';
 import Expenses from './Expenses';
 import './Dashboard.css';
+import TenantDashboard from './TenantDashboard'; // ADD THIS
 
 const Dashboard = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -38,7 +39,8 @@ const Dashboard = () => {
           </div>
         );
       default:
-        return (
+        // Show Tenant dashboard for non-admins; keep current welcome for admins
+        return isAdmin ? (
           <div className="dashboard-content">
             <div className="welcome-card">
               <h2>Welcome to Residex</h2>
@@ -48,17 +50,14 @@ const Dashboard = () => {
                 <p><strong>Role:</strong> {user.role}</p>
                 <p><strong>User ID:</strong> {user.id}</p>
               </div>
-
-              {isAdmin && (
-                <div className="admin-notice">
-                  <h3>Admin Access</h3>
-                  <p>You have administrative privileges in the system.</p>
-                </div>
-              )}
+              <div className="admin-notice">
+                <h3>Admin Access</h3>
+                <p>You have administrative privileges in the system.</p>
+              </div>
             </div>
-
-           
           </div>
+        ) : (
+          <TenantDashboard onNavigate={(v) => setCurrentView(v)} /> // ADD THIS
         );
     }
   };
