@@ -22,7 +22,7 @@ const fmtDate = (d) => new Date(d).toISOString().split('T')[0];
 
 const Expenses = () => {
   const { isAdmin } = useAuth();
-  const { showSuccess, showWarning } = useToast(); // Add showWarning for deletion
+  const { showWarning } = useToast(); // Add showWarning for deletion
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expenses, setExpenses] = useState([]);
