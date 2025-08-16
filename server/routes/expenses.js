@@ -1,32 +1,29 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken, requireAdmin } = require('../middleware/authMiddleware');
 const {
   getExpenses,
+  getExpenseStats,
+  getFinanceOverview,
   createExpense,
   updateExpense,
   deleteExpense,
-  getExpenseStats,
   allocateExpense,
-  deleteAllocation,
-  getFinanceOverview
+  deleteAllocation
 } = require('../controllers/expenseController');
-const { authenticateToken, requireAdmin } = require('../middleware/authMiddleware');
 
 router.use(authenticateToken);
-router.use(requireAdmin);
 
-// Stats + finance overview
-router.get('/stats', getExpenseStats);
-router.get('/overview', getFinanceOverview);
+// Reads (admin-only in your app)
+router.get('/', requireAdmin, getExpenses);
+router.get('/stats', requireAdmin, getExpenseStats);
+router.get('/overview', requireAdmin, getFinanceOverview);
 
-// CRUD
-router.get('/', getExpenses);
-router.post('/', createExpense);
-router.put('/:id', updateExpense);
-router.delete('/:id', deleteExpense);
-
-// Allocations
-router.post('/:id/allocate', allocateExpense);
-router.delete('/:id/allocations/:allocId', deleteAllocation);
+// Writes (admin-only)
+router.post('/', requireAdmin, createExpense);
+router.put('/:id', requireAdmin, updateExpense);
+router.delete('/:id', requireAdmin, deleteExpense);
+router.post('/:id/allocate', requireAdmin, allocateExpense);
+router.delete('/:id/allocations/:allocId', requireAdmin, deleteAllocation);
 
 module.exports = router;

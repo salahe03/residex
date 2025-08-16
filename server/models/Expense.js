@@ -44,11 +44,11 @@ const expenseSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-expenseSchema.index({ date: -1 });
-expenseSchema.index({ category: 1 });
+// Text index for search
 expenseSchema.index({ description: 'text', vendor: 'text' });
-expenseSchema.index({ 'allocations.allocatedAt': -1 });
+// Query performance indexes
+expenseSchema.index({ date: -1 });
+expenseSchema.index({ category: 1, date: -1 });
 
 // Virtuals
 expenseSchema.virtual('allocatedTotal').get(function () {

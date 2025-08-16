@@ -4,25 +4,24 @@ const Payment = require('../models/Payment');
 // GET /api/expenses?month=YYYY-MM&category=&q=
 const getExpenses = async (req, res) => {
   try {
-    const { month, category, q } = req.query;
-    const query = {};
+    const { month, category = 'all', q } = req.query;
+    const filter = {};
     if (month) {
-      const [y, m] = month.split('-').map(n => parseInt(n, 10));
-      const start = new Date(y, m - 1, 1);
-      const end = new Date(y, m, 0, 23, 59, 59, 999);
-      query.date = { $gte: start, $lte: end };
+      const [y, m] = month.split('-').map(Number);
+      const start = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0));
+      const end = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+      filter.date = { $gte: start, $lte: end };
     }
-    if (category && category !== 'all') query.category = category;
-    if (q) query.$text = { $search: q };
+    if (category && category !== 'all') filter.category = category;
+    if (q) filter.$text = { $search: q };
 
-    const expenses = await Expense.find(query)
-      .sort({ date: -1 })
+    const data = await Expense.find(filter)
+      .sort({ date: -1, createdAt: -1 })
       .populate('createdBy', 'name email')
       .populate('allocations.allocatedBy', 'name email');
 
-    res.json({ success: true, count: expenses.length, data: expenses });
-  } catch (err) {
-    console.error('Error fetching expenses:', err);
+    res.json({ success: true, data });
+  } catch (e) {
     res.status(500).json({ success: false, error: 'Server error while fetching expenses' });
   }
 };
