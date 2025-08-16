@@ -1,34 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Toast.css';
 
 const Toast = ({ message, type = 'error', duration = 5000, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  useEffect(() => {
-    // Show toast with animation
-    const showTimer = setTimeout(() => {
-      setIsVisible(true);
-    }, 10);
-
-    // Auto-hide toast after duration
-    const hideTimer = setTimeout(() => {
-      handleClose();
-    }, duration);
-
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [duration]);
-
-  const handleClose = () => {
+  // Stable close handler for effects
+  const handleClose = useCallback(() => {
     setIsLeaving(true);
     setTimeout(() => {
       setIsVisible(false);
       if (onClose) onClose();
     }, 300); // Match the CSS animation duration
-  };
+  }, [onClose]);
+
+  useEffect(() => {
+    // Show toast with animation
+    const showTimer = setTimeout(() => setIsVisible(true), 10);
+    // Auto-hide toast after duration
+    const hideTimer = setTimeout(() => handleClose(), duration);
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [duration, handleClose]);
 
   if (!isVisible && !isLeaving) return null;
 

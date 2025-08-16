@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { expenseService } from '../services/expenseService';
 import { useToast } from '../contexts/ToastContext';
 import './Expenses.css';
+import SkeletonTable from './ui/SkeletonTable'; // add this import
 
 const categories = [
   { value: 'all', label: 'All Categories' },
@@ -160,7 +161,17 @@ const Expenses = () => {
   }
 
   if (loading && !showForm && !showAllocate) {
-    return <div className="expenses-container"><div className="loading-message"><h3>Loading expenses...</h3><p>Please wait while we fetch the expense information.</p></div></div>;
+    return (
+      <div className="expenses-container page-fade">
+        <div className="expenses-header">
+          <div className="header-title">
+            <h2>📊 Expenses</h2>
+            <p>Track building expenses</p>
+          </div>
+        </div>
+        <SkeletonTable rows={8} cols={7} />
+      </div>
+    );
   }
 
   if (showForm) {

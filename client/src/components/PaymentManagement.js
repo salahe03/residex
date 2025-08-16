@@ -3,6 +3,7 @@ import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
+import SkeletonTable from './ui/SkeletonTable'; // add this import
 import './PaymentManagement.css';
 
 const PaymentManagement = () => {
@@ -50,7 +51,7 @@ const PaymentManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, user.id]);
+  }, [isAdmin, user?.id]);
 
   useEffect(() => {
     loadData();
@@ -71,10 +72,12 @@ const PaymentManagement = () => {
       setSelectedPayment(null);
       setError(''); // Clear any existing page errors
       loadData(); // Refresh data
-      
+       
       // Add success toast for tenant payment submission
       const isResubmission = selectedPayment.status === 'rejected';
-      showSuccess(`Payment proof ${isResubmission ? 'resubmitted' : 'submitted'} successfully! Your ${selectedPayment.description} payment is now awaiting admin confirmation.`);
+      showSuccess(
+        `Payment proof ${isResubmission ? 'resubmitted' : 'submitted'} successfully! Your ${selectedPayment.description} payment is now awaiting admin confirmation.`
+      );
       
       console.log('Payment submitted successfully');
     } catch (error) {
@@ -208,11 +211,14 @@ const PaymentManagement = () => {
   // Loading state
   if (loading && !showCreateBulk && !showSubmitPayment && !showConfirmPayment) {
     return (
-      <div className="payment-management-container">
-        <div className="loading-message">
-          <h3>Loading payments...</h3>
-          <p>Please wait while we fetch the payment information.</p>
+      <div className="payment-management-container page-fade">
+        <div className="payment-header">
+          <div className="header-title">
+            <h2>💰 {isAdmin ? 'Payment Management' : 'My Payments'}</h2>
+            <p>{isAdmin ? 'Manage all resident payments and charges' : 'View your payment history and submit payment proofs'}</p>
+          </div>
         </div>
+        <SkeletonTable rows={8} cols={6} />
       </div>
     );
   }

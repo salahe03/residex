@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  const { showError, showSuccess, showWarning } = useToast(); // Add this
+  const { showSuccess, showWarning } = useToast(); // Add this
 
   // Computed authentication state
   const isAuthenticated = !!user;

@@ -14,6 +14,7 @@ import {
   Filler,
 } from 'chart.js';
 import './TenantDashboard.css';
+import PageLoader from './ui/PageLoader';          // add
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
@@ -242,15 +243,10 @@ const TenantDashboard = ({ onNavigate }) => {
 
   if (loading) {
     return (
-      <div className="tenant-dashboard">
-        <div className="td-header">
-          <div className="td-title">
-            <h2>🏠 Dashboard</h2>
-            <p>Your payments overview</p>
-          </div>
-        </div>
-        <div className="td-loading">Loading your data…</div>
-      </div>
+      <PageLoader
+        title="Loading Dashboard…"
+        subtitle="Fetching your latest payments and charts"
+      />
     );
   }
 
