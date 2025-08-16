@@ -151,7 +151,7 @@ const Dashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className="main-content page-fade">
         {/* Top Header */}
         <header className="top-header">
           <button 
