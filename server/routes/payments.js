@@ -11,7 +11,7 @@ const {
   deletePayment,
   getPaymentStats
 } = require('../controllers/paymentController');
-const { authenticateToken, requireAdmin } = require('../middleware/authMiddleware');
+const { authenticateToken, requireAdmin, requireSelfOrAdmin } = require('../middleware/authMiddleware');
 
 // Apply authentication to all payment routes
 router.use(authenticateToken);
@@ -19,8 +19,8 @@ router.use(authenticateToken);
 // GET /api/payments/stats - Get payment statistics (Admin only)
 router.get('/stats', requireAdmin, getPaymentStats);
 
-// GET /api/payments/user/:userId - Get payments for specific user
-router.get('/user/:userId', getUserPayments);
+// GET /api/payments/user/:userId - Get payments for specific user (self or admin)
+router.get('/user/:userId', requireSelfOrAdmin('userId'), getUserPayments);
 
 // GET /api/payments - Get all payments (Admin only)
 router.get('/', requireAdmin, getAllPayments);

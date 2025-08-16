@@ -236,8 +236,8 @@ const submitPayment = async (req, res) => {
       });
     }
     
-    // Check if payment is in submittable state
-    if (payment.status !== 'pending' && payment.status !== 'overdue') {
+    // Check if payment is in submittable state - UPDATED to include 'rejected'
+    if (!['pending', 'overdue', 'rejected'].includes(payment.status)) {
       return res.status(400).json({
         success: false,
         error: 'Payment has already been submitted or confirmed'
@@ -331,7 +331,7 @@ const rejectPayment = async (req, res) => {
     const payment = await Payment.findByIdAndUpdate(
       paymentId,
       {
-        status: 'pending', // Reset to pending
+        status: 'rejected', // Changed from 'pending' to 'rejected'
         'paymentSubmission.submittedAt': null,
         'paymentSubmission.paymentMethod': null,
         'paymentSubmission.paymentDate': null,
@@ -348,7 +348,7 @@ const rejectPayment = async (req, res) => {
         error: 'Payment not found'
       });
     }
-    
+
     console.log('2. Payment submission rejected');
     
     res.json({

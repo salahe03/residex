@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
 import './PaymentManagement.css';
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
+  const { showSuccess, showWarning, showError } = useToast(); // Added showError back for genuine errors
   
   // Shared states
   const [loading, setLoading] = useState(true);
@@ -67,12 +69,36 @@ const PaymentManagement = () => {
       
       setShowSubmitPayment(false);
       setSelectedPayment(null);
+      setError(''); // Clear any existing page errors
       loadData(); // Refresh data
+      
+      // Add success toast for tenant payment submission
+      const isResubmission = selectedPayment.status === 'rejected';
+      showSuccess(`Payment proof ${isResubmission ? 'resubmitted' : 'submitted'} successfully! Your ${selectedPayment.description} payment is now awaiting admin confirmation.`);
       
       console.log('Payment submitted successfully');
     } catch (error) {
       console.error('Error submitting payment:', error);
-      setError(error.message);
+      
+      // Clear page error and show toast instead
+      setError('');
+      
+      // Handle different types of errors with appropriate toasts
+      if (error.message.includes('already been submitted or confirmed')) {
+        showError('This payment has already been processed and cannot be resubmitted.');
+      } else if (error.message.includes('Payment method and payment date are required')) {
+        showError('Please fill in all required fields.');
+      } else if (error.message.includes('Payment not found')) {
+        showError('Payment not found. Please refresh the page and try again.');
+      } else if (error.message.includes('only submit payment for your own charges')) {
+        showError('You can only submit payments for your own charges.');
+      } else {
+        showError('Failed to submit payment. Please try again.');
+      }
+      
+      // Close modal on error
+      setShowSubmitPayment(false);
+      setSelectedPayment(null);
     } finally {
       setProcessingPayment(null);
     }
@@ -93,6 +119,9 @@ const PaymentManagement = () => {
       setSelectedPayment(null);
       loadData(); // Refresh data
       
+      // Add success toast for admin payment confirmation
+      showSuccess(`Payment confirmed! ${selectedPayment.amount} MAD collected from ${selectedPayment.resident?.name} for ${selectedPayment.description}.`);
+      
       console.log('Payment confirmed successfully');
     } catch (error) {
       console.error('Error confirming payment:', error);
@@ -110,6 +139,10 @@ const PaymentManagement = () => {
         await paymentService.rejectPayment(payment._id, 'Payment submission rejected by admin');
         
         loadData(); // Refresh data
+        
+        // Updated to use warning toast (amber with "!" icon) for payment rejection
+        showWarning(`Payment rejected! ${payment.resident?.name}'s payment for ${payment.description} has been declined and can be resubmitted.`);
+        
         console.log('Payment rejected successfully');
       } catch (error) {
         console.error('Error rejecting payment:', error);
@@ -124,6 +157,9 @@ const PaymentManagement = () => {
   const handleCreateBulkSuccess = () => {
     setShowCreateBulk(false);
     loadData(); // Refresh data
+    
+    // Add success toast for payment creation
+    showSuccess('New payments created successfully! Residents have been notified of their payment obligations.');
   };
 
   // Filter payments based on search and status
@@ -148,6 +184,8 @@ const PaymentManagement = () => {
         return 'status-pending';
       case 'overdue':
         return 'status-overdue';
+      case 'rejected':
+        return 'status-rejected';
       default:
         return 'status-pending';
     }
@@ -244,6 +282,7 @@ const PaymentManagement = () => {
             <option value="submitted">Submitted</option>
             <option value="paid">Paid</option>
             <option value="overdue">Overdue</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
         
@@ -257,7 +296,7 @@ const PaymentManagement = () => {
 
       {/* Error message */}
       {error && (
-        <div className="error-message">
+        <div className="error-message" style={{ display: 'none' }}>
           ❌ {error}
         </div>
       )}
@@ -309,6 +348,7 @@ const PaymentManagement = () => {
                   <td className="status-cell">
                     <span className={`status-badge ${getStatusBadge(payment.status)}`}>
                       {payment.status === 'submitted' ? 'Awaiting Confirmation' : 
+                       payment.status === 'rejected' ? 'Rejected' :
                        payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                     </span>
                     {payment.confirmation?.confirmedAt && (
@@ -317,17 +357,20 @@ const PaymentManagement = () => {
                     {payment.paymentSubmission?.submittedAt && (
                       <div className="payment-date">Submitted: {formatDate(payment.paymentSubmission.submittedAt)}</div>
                     )}
+                    {payment.status === 'rejected' && payment.confirmation?.adminNotes && (
+                      <div className="rejection-reason">Reason: {payment.confirmation.adminNotes}</div>
+                    )}
                   </td>
                   <td className="actions-cell">
                     {/* Tenant Actions */}
-                    {!isAdmin && (payment.status === 'pending' || payment.status === 'overdue') && (
+                    {!isAdmin && (payment.status === 'pending' || payment.status === 'overdue' || payment.status === 'rejected') && (
                       <button
                         onClick={() => handleSubmitPayment(payment)}
                         className="pay-btn"
                         disabled={processingPayment === payment._id}
                         title="Submit payment proof"
                       >
-                        {processingPayment === payment._id ? '⏳' : '💳 Pay'}
+                        {processingPayment === payment._id ? '⏳' : payment.status === 'rejected' ? '🔄 Resubmit' : '💳 Pay'}
                       </button>
                     )}
                     
@@ -394,7 +437,7 @@ const PaymentManagement = () => {
   );
 };
 
-// Submit Payment Modal Component (Tenant)
+// Submit Payment Modal Component (Tenant) - Updated with better error handling
 const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
   const [formData, setFormData] = useState({
     paymentMethod: 'bank_transfer',
@@ -403,14 +446,35 @@ const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
     notes: ''
   });
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState(''); // Local form validation errors only
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError(''); // Clear local errors
+    
+    // Basic client-side validation
+    if (!formData.paymentMethod || !formData.paymentDate) {
+      setFormError('Please fill in all required fields.');
+      return;
+    }
+    
+    // Validate payment date is not in the future
+    const paymentDate = new Date(formData.paymentDate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    
+    if (paymentDate > today) {
+      setFormError('Payment date cannot be in the future.');
+      return;
+    }
+    
     setLoading(true);
     
     try {
       await onConfirm(formData);
+      // Success is handled by parent component
     } catch (error) {
+      // Let parent handle the error with toast
       console.error('Error submitting payment:', error);
     } finally {
       setLoading(false);
@@ -423,13 +487,18 @@ const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear form error when user starts typing
+    if (formError) {
+      setFormError('');
+    }
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
-          <h3>💳 Submit Payment Proof</h3>
+          <h3>💳 {payment.status === 'rejected' ? 'Resubmit' : 'Submit'} Payment Proof</h3>
           <button onClick={onCancel} className="close-btn">×</button>
         </div>
 
@@ -438,7 +507,22 @@ const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
           <p><strong>Amount Due:</strong> {payment.amount} MAD</p>
           <p><strong>Period:</strong> {payment.period}</p>
           <p><strong>Due Date:</strong> {new Date(payment.dueDate).toLocaleDateString()}</p>
+          {payment.status === 'rejected' && (
+            <div className="rejection-notice">
+              <p><strong>Previous submission was rejected.</strong></p>
+              {payment.confirmation?.adminNotes && (
+                <p><em>Reason: {payment.confirmation.adminNotes}</em></p>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Show only local form validation errors */}
+        {formError && (
+          <div className="form-error">
+            {formError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="submit-payment-form">
           <div className="form-group">
@@ -468,6 +552,7 @@ const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
               onChange={handleChange}
               required
               disabled={loading}
+              max={new Date().toISOString().split('T')[0]} // Prevent future dates
             />
           </div>
 
@@ -511,7 +596,7 @@ const SubmitPaymentModal = ({ payment, onConfirm, onCancel }) => {
               className="confirm-btn"
               disabled={loading}
             >
-              {loading ? 'Submitting...' : 'Submit Payment Proof'}
+              {loading ? 'Submitting...' : payment.status === 'rejected' ? 'Resubmit Payment Proof' : 'Submit Payment Proof'}
             </button>
           </div>
         </form>
