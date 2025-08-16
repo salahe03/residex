@@ -164,16 +164,79 @@ const TenantDashboard = ({ onNavigate }) => {
     ]
   }), [monthLabels, series]);
 
+  // Number formatter
+  const fmtNum = (v) => {
+    const n = typeof v === 'number' ? v : Number(String(v).replace(/,/g, ''));
+    return Number.isFinite(n) ? n.toLocaleString() : String(v);
+  };
+
+  // Create or get a tooltip element per-chart (attached to <body> to avoid clipping)
+  const getOrCreateTooltip = (chart) => {
+    if (chart.$externalTooltipEl) return chart.$externalTooltipEl;
+    const el = document.createElement('div');
+    el.className = 'chartjs-tooltip';
+    const inner = document.createElement('div');
+    inner.className = 'chartjs-tooltip-inner';
+    el.appendChild(inner);
+    document.body.appendChild(el); // attach to body
+    chart.$externalTooltipEl = el;
+    return el;
+  };
+
+  // External HTML tooltip
+  const externalTooltip = (ctx) => {
+    const { chart, tooltip } = ctx;
+    const el = getOrCreateTooltip(chart);
+
+    // Hide
+    if (!tooltip || tooltip.opacity === 0) {
+      el.classList.remove('visible');
+      el.style.opacity = 0;
+      return;
+    }
+
+    // Content
+    const title = (tooltip.title && tooltip.title.length) ? tooltip.title[0] : '';
+    const items = tooltip.dataPoints || [];
+    const rows = items.map((i) => {
+      const color = i.dataset?.borderColor || i.dataset?.backgroundColor || '#64748b';
+      const label = i.dataset?.label ? `${i.dataset.label}: ` : '';
+      const value = fmtNum(i.formattedValue ?? i.parsed?.y ?? i.raw ?? '');
+      const c = Array.isArray(color) ? color[0] : color;
+      return `<div class="row">
+        <span class="dot" style="--c:${c}"></span>
+        <span class="text">${label}${value}</span>
+      </div>`;
+    }).join('');
+
+    el.querySelector('.chartjs-tooltip-inner').innerHTML = `
+      <div class="title">${title}</div>
+      ${rows}
+    `;
+
+    // Position relative to viewport, since tooltip is in <body>
+    const rect = chart.canvas.getBoundingClientRect();
+    const left = rect.left + window.scrollX + tooltip.caretX;
+    const top = rect.top + window.scrollY + tooltip.caretY;
+
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+    // Don't set transform here; CSS will handle translate/animation
+    el.style.opacity = 1;
+    el.classList.add('visible');
+  };
+
   const baseOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
     plugins: {
-      legend: { display: true, labels: { boxWidth: 12 } },
-      tooltip: { mode: 'index', intersect: false },
+      legend: { display: true, labels: { boxWidth: 12, padding: 12 } },
+      tooltip: { enabled: false, external: externalTooltip }
     },
     scales: {
-      x: { grid: { display: false } },
-      y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { callback: (v) => `${v} MAD` } }
+      x: { grid: { display: false }, ticks: { color: '#6b7280' } },
+      y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { callback: (v) => `${Number(v).toLocaleString()}` } }
     }
   };
 
@@ -204,25 +267,91 @@ const TenantDashboard = ({ onNavigate }) => {
 
       {/* Stat tiles */}
       <div className="td-tiles">
+        {/* Total Assigned */}
         <div className="td-tile clickable" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
-          <span className="td-number">{MAD(totalAssigned)}</span>
-          <span className="td-label">Total Assigned</span>
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Banknote (outlined, clean) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2.25" />
+                <path d="M6 12h.01M18 12h.01" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{MAD(totalAssigned)}</span>
+              <span className="td-label">Total Assigned</span>
+            </div>
+          </div>
         </div>
+
+        {/* Amount Paid */}
         <div className="td-tile clickable" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
-          <span className="td-number">{MAD(totalPaid)}</span>
-          <span className="td-label">Amount Paid</span>
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Check Circle (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{MAD(totalPaid)}</span>
+              <span className="td-label">Amount Paid</span>
+            </div>
+          </div>
         </div>
+
+        {/* Outstanding */}
         <div className="td-tile clickable warning" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
-          <span className="td-number">{MAD(outstanding)}</span>
-          <span className="td-label">Outstanding</span>
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Alert Circle (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v5" />
+                <path d="M12 16h.01" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{MAD(outstanding)}</span>
+              <span className="td-label">Outstanding</span>
+            </div>
+          </div>
         </div>
+
+        {/* Next Due Date */}
         <div className="td-tile">
-          <span className="td-number">{nextDue ? fmtDate(nextDue) : '-'}</span>
-          <span className="td-label">Next Due Date</span>
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Calendar (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{nextDue ? fmtDate(nextDue) : '-'}</span>
+              <span className="td-label">Next Due Date</span>
+            </div>
+          </div>
         </div>
+
+        {/* Last Payment */}
         <div className="td-tile">
-          <span className="td-number">{lastPaymentDate ? fmtDate(lastPaymentDate) : '-'}</span>
-          <span className="td-label">Last Payment</span>
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Clock (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{lastPaymentDate ? fmtDate(lastPaymentDate) : '-'}</span>
+              <span className="td-label">Last Payment</span>
+            </div>
+          </div>
         </div>
       </div>
 
