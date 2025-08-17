@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback import
+import React, { useState, useEffect, useCallback } from 'react';
 import { residentService } from '../services/residentService';
 import { userService } from '../services/userService';
 import AddResident from './AddResident';
 import EditResident from './EditResident';
 import './ResidentManagement.css';
+import SkeletonTable from './ui/SkeletonTable';
 
 const ResidentManagement = () => {
   // Active tab state
@@ -212,11 +213,15 @@ const ResidentManagement = () => {
   // Loading state
   if (loading && !showAddForm && !showEditForm) {
     return (
-      <div className="resident-management-container">
-        <div className="loading-message">
-          <h3>Loading data...</h3>
-          <p>Please wait while we fetch the information.</p>
+      <div className="resident-management-container page-fade">
+        <div className="management-header">
+          <div className="header-title">
+            <h2>🏠 Resident Management</h2>
+            <p>Manage building residents and their information</p>
+          </div>
         </div>
+        {/* Shimmering table placeholder (8 cols like the real table) */}
+        <SkeletonTable rows={8} cols={8} />
       </div>
     );
   }
