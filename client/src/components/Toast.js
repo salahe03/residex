@@ -1,36 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Toast.css';
 
 const Toast = ({ message, type = 'error', duration = 5000, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  useEffect(() => {
-    // Show toast with animation
-    const showTimer = setTimeout(() => {
-      setIsVisible(true);
-    }, 10);
+  // Stable close handler for effects
+  const handleClose = useCallback(() => {
+    setIsLeaving(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      if (onClose) onClose();
+    }, 280); // Match the CSS closing animation duration
+  }, [onClose]);
 
-    // Auto-hide toast after duration
-    const hideTimer = setTimeout(() => {
-      handleClose();
-    }, duration);
+  useEffect(() => {
+    // Mount hidden (offscreen), then animate in
+    const showTimer = setTimeout(() => setIsVisible(true), 10);
+    const hideTimer = setTimeout(() => handleClose(), duration);
 
     return () => {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
     };
-  }, [duration]);
+  }, [duration, handleClose]);
 
-  const handleClose = () => {
-    setIsLeaving(true);
-    setTimeout(() => {
-      setIsVisible(false);
-      if (onClose) onClose();
-    }, 300); // Match the CSS animation duration
-  };
-
-  if (!isVisible && !isLeaving) return null;
+  // NOTE: keep rendering so the base .toast styles apply first; then .toast-show animates in
+  // Removed the early return that prevented mount on first paint
 
   const getIcon = () => {
     switch (type) {
@@ -47,7 +43,11 @@ const Toast = ({ message, type = 'error', duration = 5000, onClose }) => {
   };
 
   return (
-    <div className={`toast toast-${type} ${isVisible && !isLeaving ? 'toast-show' : ''} ${isLeaving ? 'toast-hide' : ''}`}>
+    <div
+      className={`toast toast-${type} ${isVisible && !isLeaving ? 'toast-show' : ''} ${isLeaving ? 'toast-hide' : ''}`}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="toast-content">
         <span className="toast-icon">{getIcon()}</span>
         <div className="toast-message">

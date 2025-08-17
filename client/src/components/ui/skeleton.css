@@ -1,0 +1,75 @@
+/* Base skeleton */
+.skel {
+  --shimmer: linear-gradient(90deg, rgba(0,0,0,0), rgba(255,255,255,0.6), rgba(0,0,0,0));
+  background: #eef1f6;
+  background-image: var(--shimmer);
+  background-repeat: no-repeat;
+  background-size: 200px 100%;
+  animation: skel-shimmer 1.4s infinite;
+  border-radius: 8px;
+  display: block;
+  height: 14px;
+}
+
+@keyframes skel-shimmer {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+/* Card wrapper to mimic your table cards */
+.skel-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.02);
+  padding: 0;
+  overflow: hidden;
+}
+
+.skel-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #f1f3f6;
+  background: #fafafa;
+}
+
+.skel-title { width: 180px; height: 20px; border-radius: 6px; }
+.skel-chip { width: 100px; height: 16px; border-radius: 100px; }
+
+/* Table skeleton */
+.skel-table { padding: 6px 0 10px; }
+.skel-thead, .skel-tr {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+  padding: 10px 20px;
+}
+
+.skel-th {
+  grid-column: span 2;
+  height: 12px;
+  border-radius: 4px;
+  opacity: .8;
+}
+
+.skel-tbody { }
+.skel-tr { align-items: center; }
+.skel-td { height: 16px; border-radius: 6px; }
+
+.w-16 { grid-column: span 2; }
+.w-20 { grid-column: span 3; }
+.w-40 { grid-column: span 5; }
+
+.skel-footer {
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px 18px;
+}
+.skel-pill { width: 120px; height: 12px; border-radius: 999px; }
+
+/* Make shimmer softer in dark tooltip areas not used here, but keep consistent */
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; }
+}
