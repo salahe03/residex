@@ -210,17 +210,10 @@ const ResidentManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Loading state
+  // Loading state - remove the header card
   if (loading && !showAddForm && !showEditForm) {
     return (
       <div className="resident-management-container page-fade">
-        <div className="management-header">
-          <div className="header-title">
-            <h2>🏠 Resident Management</h2>
-            <p>Manage building residents and their information</p>
-          </div>
-        </div>
-        {/* Shimmering table placeholder (8 cols like the real table) */}
         <SkeletonTable rows={8} cols={8} />
       </div>
     );
@@ -274,80 +267,55 @@ const ResidentManagement = () => {
         </button>
       </div>
 
-      {/* Header with stats - Different for each tab */}
-      {activeTab === 'residents' && (
-        <div className="management-header">
-          <div className="header-title">
-            <h2>🏠 Resident Management</h2>
-            <p>Manage building residents and their information</p>
+      {/* KEEP the stats but remove the title cards */}
+      {activeTab === 'residents' && stats && (
+        <div className="management-stats">
+          <div className="stat-card">
+            <span className="stat-number">{stats.activeUsers - stats.totalAdmins}</span>
+            <span className="stat-label">Total Residents</span>
           </div>
-          
-          {stats && (
-            <div className="management-stats">
-              <div className="stat-card">
-                <span className="stat-number">{stats.activeUsers - stats.totalAdmins}</span>
-                <span className="stat-label">Total Residents</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-number">{stats.totalOwners}</span>
-                <span className="stat-label">Owners</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-number">{stats.totalTenants}</span>
-                <span className="stat-label">Tenants</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-number">{Math.round(stats.averageMonthlyCharge || 0)} MAD</span>
-                <span className="stat-label">Avg. Monthly Charge</span>
-              </div>
-            </div>
-          )}
+          <div className="stat-card">
+            <span className="stat-number">{stats.totalOwners}</span>
+            <span className="stat-label">Owners</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-number">{stats.totalTenants}</span>
+            <span className="stat-label">Tenants</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-number">{Math.round(stats.averageMonthlyCharge || 0)} MAD</span>
+            <span className="stat-label">Avg. Monthly Charge</span>
+          </div>
         </div>
       )}
 
       {activeTab === 'pending' && (
-        <div className="management-header">
-          <div className="header-title">
-            <h2>⏳ Pending Registrations</h2>
-            <p>Review and approve new user registrations</p>
-          </div>
-          
-          <div className="management-stats">
-            <div className="stat-card">
-              <span className="stat-number">{pendingUsers.length}</span>
-              <span className="stat-label">Pending Approval</span>
-            </div>
+        <div className="management-stats">
+          <div className="stat-card">
+            <span className="stat-number">{pendingUsers.length}</span>
+            <span className="stat-label">Pending Approval</span>
           </div>
         </div>
       )}
 
-      {activeTab === 'users' && (
-        <div className="management-header">
-          <div className="header-title">
-            <h2>👥 User Management</h2>
-            <p>Manage all system users and their permissions</p>
+      {activeTab === 'users' && stats && (
+        <div className="management-stats">
+          <div className="stat-card">
+            <span className="stat-number">{stats.totalUsers}</span>
+            <span className="stat-label">Total Users</span>
           </div>
-          
-          {stats && (
-            <div className="management-stats">
-              <div className="stat-card">
-                <span className="stat-number">{stats.totalUsers}</span>
-                <span className="stat-label">Total Users</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-number">{stats.activeUsers}</span>
-                <span className="stat-label">Active</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-number">{stats.pendingUsers}</span>
-                <span className="stat-label">Pending</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-number">{stats.totalAdmins}</span>
-                <span className="stat-label">Admins</span>
-              </div>
-            </div>
-          )}
+          <div className="stat-card">
+            <span className="stat-number">{stats.activeUsers}</span>
+            <span className="stat-label">Active</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-number">{stats.pendingUsers}</span>
+            <span className="stat-label">Pending</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-number">{stats.totalAdmins}</span>
+            <span className="stat-label">Admins</span>
+          </div>
         </div>
       )}
 

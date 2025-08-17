@@ -6,6 +6,23 @@
   gap: 24px;
 }
 
+.td-sheet {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.08);
+  /* small outer spacing so the sheet looks detached from the background */
+  margin: 18px 18px 24px;
+  /* Add proper spacing between major sections */
+  display: grid;
+  gap: 32px;
+}
+
+/* Optional: nudge sheet slightly away from the sidebar to mimic the sample */
+@media (min-width: 1024px) {
+  .td-sheet { margin-left: 24px; margin-right: 24px; }
+}
+
 .td-header {
   background: #fff;
   border-radius: 12px;
