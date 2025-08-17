@@ -11,13 +11,12 @@ const Toast = ({ message, type = 'error', duration = 5000, onClose }) => {
     setTimeout(() => {
       setIsVisible(false);
       if (onClose) onClose();
-    }, 300); // Match the CSS animation duration
+    }, 280); // Match the CSS closing animation duration
   }, [onClose]);
 
   useEffect(() => {
-    // Show toast with animation
+    // Mount hidden (offscreen), then animate in
     const showTimer = setTimeout(() => setIsVisible(true), 10);
-    // Auto-hide toast after duration
     const hideTimer = setTimeout(() => handleClose(), duration);
 
     return () => {
@@ -26,7 +25,8 @@ const Toast = ({ message, type = 'error', duration = 5000, onClose }) => {
     };
   }, [duration, handleClose]);
 
-  if (!isVisible && !isLeaving) return null;
+  // NOTE: keep rendering so the base .toast styles apply first; then .toast-show animates in
+  // Removed the early return that prevented mount on first paint
 
   const getIcon = () => {
     switch (type) {
@@ -43,7 +43,11 @@ const Toast = ({ message, type = 'error', duration = 5000, onClose }) => {
   };
 
   return (
-    <div className={`toast toast-${type} ${isVisible && !isLeaving ? 'toast-show' : ''} ${isLeaving ? 'toast-hide' : ''}`}>
+    <div
+      className={`toast toast-${type} ${isVisible && !isLeaving ? 'toast-show' : ''} ${isLeaving ? 'toast-hide' : ''}`}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="toast-content">
         <span className="toast-icon">{getIcon()}</span>
         <div className="toast-message">

@@ -10,7 +10,8 @@
   z-index: 9999;
   transform: translateX(400px);
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  /* Smooth, deliberate ease for entering */
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms ease-out;
   border-left: 4px solid;
   overflow: hidden;
 }
@@ -20,9 +21,11 @@
   opacity: 1;
 }
 
+/* Slightly quicker ease-in for closing */
 .toast-hide {
   transform: translateX(400px);
   opacity: 0;
+  transition: transform 280ms cubic-bezier(0.4, 0, 1, 1), opacity 240ms ease-in;
 }
 
 /* Toast Types */
@@ -136,21 +139,24 @@
     left: 10px;
     min-width: auto;
     max-width: none;
+    /* vertical slide for mobile keeps the same timing */
     transform: translateY(-100px);
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms ease-out;
   }
-  
+
   .toast-show {
     transform: translateY(0);
   }
-  
+
   .toast-hide {
     transform: translateY(-100px);
+    transition: transform 280ms cubic-bezier(0.4, 0, 1, 1), opacity 240ms ease-in;
   }
-  
+
   .toast-content {
     padding: 14px 16px;
   }
-  
+
   .toast-message {
     font-size: 13px;
   }
