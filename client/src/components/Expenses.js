@@ -162,7 +162,7 @@ const Expenses = () => {
 
   if (loading && !showForm && !showAllocate) {
     return (
-      <div className="expenses-container page-fade">
+      <div className="universal-page-container page-fade">
         <SkeletonTable rows={8} cols={7} />
       </div>
     );
@@ -190,14 +190,12 @@ const Expenses = () => {
   }
 
   return (
-    <div className="expenses-container">
+    <div className="universal-page-container">
       {/* KEEP the stats but remove the title card */}
       <div className="expenses-stats">
         <div className="stat-card"><span className="stat-number">{fmtMAD(stats?.currentMonthTotal || 0)}</span><span className="stat-label">This Month</span></div>
         <div className="stat-card"><span className="stat-number">{fmtMAD(stats?.grandTotal || 0)}</span><span className="stat-label">Year To Date</span></div>
         <div className="stat-card"><span className="stat-number">{topCategory}</span><span className="stat-label">Top Category</span></div>
-
-        {/* CHANGED: make finance cards clearly all-time */}
         <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.paidRevenue || 0)}</span><span className="stat-label">Collected (All‑Time)</span></div>
         <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.allocatedToExpenses || 0)}</span><span className="stat-label">Allocated (All‑Time)</span></div>
         <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.fundBalance || 0)}</span><span className="stat-label">Fund Balance</span></div>
