@@ -210,7 +210,7 @@ const PaymentManagement = () => {
   // Loading state
   if (loading && !showCreateBulk && !showSubmitPayment && !showConfirmPayment) {
     return (
-      <div className="payment-management-container page-fade">
+      <div className="universal-page-container page-fade">
         <SkeletonTable rows={8} cols={6} />
       </div>
     );
@@ -227,7 +227,7 @@ const PaymentManagement = () => {
   }
 
   return (
-    <div className="payment-management-container">
+    <div className="universal-page-container">
       {/* KEEP the stats but remove the title card */}
       {stats && isAdmin && (
         <div className="payment-stats">
