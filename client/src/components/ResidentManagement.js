@@ -213,7 +213,7 @@ const ResidentManagement = () => {
   // Loading state - remove the header card
   if (loading && !showAddForm && !showEditForm) {
     return (
-      <div className="resident-management-container page-fade">
+      <div className="universal-page-container page-fade">
         <SkeletonTable rows={8} cols={8} />
       </div>
     );
@@ -241,7 +241,7 @@ const ResidentManagement = () => {
 
   // Main component render
   return (
-    <div className="resident-management-container">
+    <div className="universal-page-container">
       {/* Tab Navigation */}
       <div className="management-tabs">
         <button 
