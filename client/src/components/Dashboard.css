@@ -48,9 +48,9 @@
 
   border-right: none;
   
-  /* Ensure it overlaps properly */
+ 
   position: relative;
-  z-index: 101; /* Above the integrated header */
+  z-index: 101; 
 }
 
 .sidebar-close {
