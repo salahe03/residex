@@ -3,7 +3,9 @@ import { residentService } from '../services/residentService';
 import { userService } from '../services/userService';
 import AddResident from './AddResident';
 import EditResident from './EditResident';
+import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import './ResidentManagement.css';
+import './ui/KpiTiles.css';
 import SkeletonTable from './ui/SkeletonTable';
 
 const ResidentManagement = () => {
@@ -267,59 +269,95 @@ const ResidentManagement = () => {
         </button>
       </div>
 
-      {/* KEEP the stats but remove the title cards */}
+      {/* REPLACE old management-stats with KpiTiles */}
       {activeTab === 'residents' && stats && (
-        <div className="management-stats">
-          <div className="stat-card">
-            <span className="stat-number">{stats.activeUsers - stats.totalAdmins}</span>
-            <span className="stat-label">Total Residents</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{stats.totalOwners}</span>
-            <span className="stat-label">Owners</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{stats.totalTenants}</span>
-            <span className="stat-label">Tenants</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{Math.round(stats.averageMonthlyCharge || 0)} MAD</span>
-            <span className="stat-label">Avg. Monthly Charge</span>
-          </div>
-        </div>
+        <KpiTiles
+          items={[
+            {
+              label: 'Total Residents',
+              value: (stats.activeUsers - stats.totalAdmins).toLocaleString(),
+              color: 'blue',
+              icon: KPI_ICONS.users
+            },
+            {
+              label: 'Owners',
+              value: (stats.totalOwners || 0).toLocaleString(),
+              color: 'purple',
+              icon: KPI_ICONS.wallet
+            },
+            {
+              label: 'Tenants',
+              value: (stats.totalTenants || 0).toLocaleString(),
+              color: 'cyan',
+              icon: KPI_ICONS.banknote
+            },
+            {
+              label: 'Avg. Monthly Charge',
+              value: `${Math.round(stats.averageMonthlyCharge || 0)} MAD`,
+              color: 'green',
+              icon: KPI_ICONS.chartUp
+            }
+          ]}
+        />
       )}
 
       {activeTab === 'pending' && (
-        <div className="management-stats">
-          <div className="stat-card">
-            <span className="stat-number">{pendingUsers.length}</span>
-            <span className="stat-label">Pending Approval</span>
-          </div>
-        </div>
+        <KpiTiles
+          items={[
+            {
+              label: 'Pending Approval',
+              value: pendingUsers.length.toLocaleString(),
+              color: 'orange',
+              icon: KPI_ICONS.alert
+            },
+            {
+              label: 'Active Users',
+              value: (stats?.activeUsers || 0).toLocaleString(),
+              color: 'green',
+              icon: KPI_ICONS.checkCircle
+            },
+            {
+              label: 'Total Users',
+              value: (stats?.totalUsers || 0).toLocaleString(),
+              color: 'indigo',
+              icon: KPI_ICONS.users
+            }
+          ]}
+        />
       )}
 
       {activeTab === 'users' && stats && (
-        <div className="management-stats">
-          <div className="stat-card">
-            <span className="stat-number">{stats.totalUsers}</span>
-            <span className="stat-label">Total Users</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{stats.activeUsers}</span>
-            <span className="stat-label">Active</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{stats.pendingUsers}</span>
-            <span className="stat-label">Pending</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{stats.totalAdmins}</span>
-            <span className="stat-label">Admins</span>
-          </div>
-        </div>
+        <KpiTiles
+          items={[
+            {
+              label: 'Total Users',
+              value: (stats.totalUsers || 0).toLocaleString(),
+              color: 'indigo',
+              icon: KPI_ICONS.users
+            },
+            {
+              label: 'Active',
+              value: (stats.activeUsers || 0).toLocaleString(),
+              color: 'green',
+              icon: KPI_ICONS.checkCircle
+            },
+            {
+              label: 'Pending',
+              value: (stats.pendingUsers || 0).toLocaleString(),
+              color: 'orange',
+              icon: KPI_ICONS.alert
+            },
+            {
+              label: 'Admins',
+              value: (stats.totalAdmins || 0).toLocaleString(),
+              color: 'purple',
+              icon: KPI_ICONS.wallet
+            }
+          ]}
+        />
       )}
 
-      {/* Controls - Different for each tab */}
+      {/* Controls - stays exactly the same */}
       {activeTab === 'residents' && (
         <div className="management-controls">
           <div className="search-filters">
