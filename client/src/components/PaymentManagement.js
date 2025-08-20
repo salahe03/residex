@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
 import SkeletonTable from './ui/SkeletonTable'; // add this import
+import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
+import './ui/KpiTiles.css';
 import './PaymentManagement.css';
 
 const PaymentManagement = () => {
@@ -228,26 +230,38 @@ const PaymentManagement = () => {
 
   return (
     <div className="universal-page-container">
-      {/* KEEP the stats but remove the title card */}
+      {/* KEEP the stats but render with unified tiles */}
       {stats && isAdmin && (
-        <div className="payment-stats">
-          <div className="stat-card">
-            <span className="stat-number">{stats.total.count}</span>
-            <span className="stat-label">Total Payments</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{formatCurrency(stats.total.paidAmount)}</span>
-            <span className="stat-label">Amount Collected</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{formatCurrency(stats.total.totalAmount - stats.total.paidAmount)}</span>
-            <span className="stat-label">Outstanding</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{formatCurrency(Math.round(stats.averagePayment))}</span>
-            <span className="stat-label">Avg. Payment</span>
-          </div>
-        </div>
+        <KpiTiles
+          items={[
+            {
+              label: 'Total Payments',
+              value: (stats.total?.count ?? 0).toLocaleString(),
+              color: 'indigo',
+              icon: KPI_ICONS.receipt
+            },
+            {
+              label: 'Amount Collected',
+              value: formatCurrency(stats.total?.paidAmount ?? 0),
+              color: 'green',
+              icon: KPI_ICONS.checkCircle
+            },
+            {
+              label: 'Outstanding',
+              value: formatCurrency(
+                Math.max(0, (stats.total?.totalAmount ?? 0) - (stats.total?.paidAmount ?? 0))
+              ),
+              color: 'orange',
+              icon: KPI_ICONS.alert
+            },
+            {
+              label: 'Avg. Payment',
+              value: formatCurrency(Math.round(stats.averagePayment ?? 0)),
+              color: 'purple',
+              icon: KPI_ICONS.chartUp
+            }
+          ]}
+        />
       )}
 
       {/* Controls */}
