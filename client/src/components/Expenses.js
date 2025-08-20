@@ -4,6 +4,8 @@ import { expenseService } from '../services/expenseService';
 import { useToast } from '../contexts/ToastContext';
 import './Expenses.css';
 import SkeletonTable from './ui/SkeletonTable'; // add this import
+import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
+import './ui/KpiTiles.css';
 
 const categories = [
   { value: 'all', label: 'All Categories' },
@@ -191,16 +193,24 @@ const Expenses = () => {
 
   return (
     <div className="universal-page-container">
-      {/* KEEP the stats but remove the title card */}
-      <div className="expenses-stats">
-        <div className="stat-card"><span className="stat-number">{fmtMAD(stats?.currentMonthTotal || 0)}</span><span className="stat-label">This Month</span></div>
-        <div className="stat-card"><span className="stat-number">{fmtMAD(stats?.grandTotal || 0)}</span><span className="stat-label">Year To Date</span></div>
-        <div className="stat-card"><span className="stat-number">{topCategory}</span><span className="stat-label">Top Category</span></div>
-        <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.paidRevenue || 0)}</span><span className="stat-label">Collected (All‑Time)</span></div>
-        <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.allocatedToExpenses || 0)}</span><span className="stat-label">Allocated (All‑Time)</span></div>
-        <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.fundBalance || 0)}</span><span className="stat-label">Fund Balance</span></div>
-        <div className="stat-card"><span className="stat-number">{fmtMAD(overview?.outstandingExpenses || 0)}</span><span className="stat-label">Outstanding (All‑Time)</span></div>
-      </div>
+      {/* Stats */}
+      <KpiTiles
+        items={[
+          { label: 'This Month',     value: fmtMAD(stats?.currentMonthTotal || 0), color: 'blue',   icon: KPI_ICONS.banknote },
+          { label: 'Year To Date',   value: fmtMAD(stats?.grandTotal || 0),        color: 'indigo', icon: KPI_ICONS.chartUp },
+          { label: 'Top Category',   value: topCategory || '-',                     color: 'purple', icon: KPI_ICONS.tag },
+        ]}
+      />
+
+      {/* Finance overview group */}
+      <KpiTiles
+        items={[
+          { label: 'Collected (All‑Time)', value: fmtMAD(overview?.paidRevenue || 0),         color: 'green',  icon: KPI_ICONS.checkCircle },
+          { label: 'Allocated (All‑Time)', value: fmtMAD(overview?.allocatedToExpenses || 0), color: 'cyan',   icon: KPI_ICONS.wallet },
+          { label: 'Fund Balance',         value: fmtMAD(overview?.fundBalance || 0),         color: 'teal',   icon: KPI_ICONS.banknote },
+          { label: 'Outstanding (All‑Time)', value: fmtMAD(overview?.outstandingExpenses || 0), color: 'orange', icon: KPI_ICONS.alert },
+        ]}
+      />
 
       <div className="expenses-controls">
         <div className="search-filters">
