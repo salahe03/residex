@@ -1,7 +1,7 @@
 .resident-management-container {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding: 20px;
+  background: transparent; /* was #f8f9fa */
+  padding: 0;               /* let content-shell-body control spacing */
 }
 
 /* Tab Navigation */
