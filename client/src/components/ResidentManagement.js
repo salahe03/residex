@@ -72,6 +72,18 @@ const ResidentManagement = () => {
     loadData();
   }, [loadData]); // Now loadData is the only dependency
 
+  // --- NEW: lightweight KPI skeleton (only the tiles area) ---
+  const KpiSkeleton = ({ count = 4 }) => (
+    <div className="kpi-skeletons">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="kpi-skeleton">
+          <div className="kpi-skel-number" />
+          <div className="kpi-skel-label" />
+        </div>
+      ))}
+    </div>
+  );
+
   // =====================
   // RESIDENTS FUNCTIONS
   // =====================
@@ -212,15 +224,6 @@ const ResidentManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Loading state - remove the header card
-  if (loading && !showAddForm && !showEditForm) {
-    return (
-      <div className="universal-page-container page-fade">
-        <SkeletonTable rows={8} cols={8} />
-      </div>
-    );
-  }
-
   // Render forms if active
   if (showAddForm) {
     return (
@@ -269,95 +272,46 @@ const ResidentManagement = () => {
         </button>
       </div>
 
-      {/* REPLACE old management-stats with KpiTiles */}
-      {activeTab === 'residents' && stats && (
-        <KpiTiles
-          items={[
-            {
-              label: 'Total Residents',
-              value: (stats.activeUsers - stats.totalAdmins).toLocaleString(),
-              color: 'blue',
-              icon: KPI_ICONS.users
-            },
-            {
-              label: 'Owners',
-              value: (stats.totalOwners || 0).toLocaleString(),
-              color: 'purple',
-              icon: KPI_ICONS.wallet
-            },
-            {
-              label: 'Tenants',
-              value: (stats.totalTenants || 0).toLocaleString(),
-              color: 'cyan',
-              icon: KPI_ICONS.banknote
-            },
-            {
-              label: 'Avg. Monthly Charge',
-              value: `${Math.round(stats.averageMonthlyCharge || 0)} MAD`,
-              color: 'green',
-              icon: KPI_ICONS.chartUp
-            }
-          ]}
-        />
+      {/* KPI tiles per tab: show skeleton while loading */}
+      {activeTab === 'residents' && (
+        stats ? (
+          <KpiTiles
+            items={[
+              { label: 'Total Residents', value: (stats.activeUsers - stats.totalAdmins).toLocaleString(), color: 'blue',   icon: KPI_ICONS.users },
+              { label: 'Owners',          value: (stats.totalOwners || 0).toLocaleString(),                            color: 'purple', icon: KPI_ICONS.wallet },
+              { label: 'Tenants',         value: (stats.totalTenants || 0).toLocaleString(),                           color: 'cyan',   icon: KPI_ICONS.banknote },
+              { label: 'Avg. Monthly Charge', value: `${Math.round(stats.averageMonthlyCharge || 0)} MAD`,             color: 'green',  icon: KPI_ICONS.chartUp }
+            ]}
+          />
+        ) : loading ? <KpiSkeleton /> : null
       )}
 
       {activeTab === 'pending' && (
-        <KpiTiles
-          items={[
-            {
-              label: 'Pending Approval',
-              value: pendingUsers.length.toLocaleString(),
-              color: 'orange',
-              icon: KPI_ICONS.alert
-            },
-            {
-              label: 'Active Users',
-              value: (stats?.activeUsers || 0).toLocaleString(),
-              color: 'green',
-              icon: KPI_ICONS.checkCircle
-            },
-            {
-              label: 'Total Users',
-              value: (stats?.totalUsers || 0).toLocaleString(),
-              color: 'indigo',
-              icon: KPI_ICONS.users
-            }
-          ]}
-        />
+        stats ? (
+          <KpiTiles
+            items={[
+              { label: 'Pending Approval', value: pendingUsers.length.toLocaleString(), color: 'orange', icon: KPI_ICONS.alert },
+              { label: 'Active Users',     value: (stats?.activeUsers || 0).toLocaleString(), color: 'green', icon: KPI_ICONS.checkCircle },
+              { label: 'Total Users',      value: (stats?.totalUsers || 0).toLocaleString(), color: 'indigo', icon: KPI_ICONS.users }
+            ]}
+          />
+        ) : loading ? <KpiSkeleton count={3} /> : null
       )}
 
-      {activeTab === 'users' && stats && (
-        <KpiTiles
-          items={[
-            {
-              label: 'Total Users',
-              value: (stats.totalUsers || 0).toLocaleString(),
-              color: 'indigo',
-              icon: KPI_ICONS.users
-            },
-            {
-              label: 'Active',
-              value: (stats.activeUsers || 0).toLocaleString(),
-              color: 'green',
-              icon: KPI_ICONS.checkCircle
-            },
-            {
-              label: 'Pending',
-              value: (stats.pendingUsers || 0).toLocaleString(),
-              color: 'orange',
-              icon: KPI_ICONS.alert
-            },
-            {
-              label: 'Admins',
-              value: (stats.totalAdmins || 0).toLocaleString(),
-              color: 'purple',
-              icon: KPI_ICONS.wallet
-            }
-          ]}
-        />
+      {activeTab === 'users' && (
+        stats ? (
+          <KpiTiles
+            items={[
+              { label: 'Total Users', value: (stats.totalUsers || 0).toLocaleString(), color: 'indigo', icon: KPI_ICONS.users },
+              { label: 'Active',      value: (stats.activeUsers || 0).toLocaleString(), color: 'green',  icon: KPI_ICONS.checkCircle },
+              { label: 'Pending',     value: (stats.pendingUsers || 0).toLocaleString(), color: 'orange', icon: KPI_ICONS.alert },
+              { label: 'Admins',      value: (stats.totalAdmins || 0).toLocaleString(), color: 'purple', icon: KPI_ICONS.wallet }
+            ]}
+          />
+        ) : loading ? <KpiSkeleton /> : null
       )}
 
-      {/* Controls - stays exactly the same */}
+      {/* Controls stay visible even while loading */}
       {activeTab === 'residents' && (
         <div className="management-controls">
           <div className="search-filters">
@@ -414,16 +368,14 @@ const ResidentManagement = () => {
       )}
 
       {/* Error message */}
-      {error && (
-        <div className="error-message">
-          ❌ {error}
-        </div>
-      )}
+      {error && <div className="error-message">❌ {error}</div>}
 
-      {/* RESIDENTS TAB CONTENT */}
+      {/* Tables: only table area shows skeleton while loading */}
       {activeTab === 'residents' && (
         <>
-          {filteredResidents.length === 0 ? (
+          {loading ? (
+            <SkeletonTable rows={8} cols={8} />
+          ) : filteredResidents.length === 0 ? (
             <div className="no-residents">
               <h3>No residents found</h3>
               <p>
@@ -500,9 +452,7 @@ const ResidentManagement = () => {
               </table>
             </div>
           )}
-
-          {/* Results summary */}
-          {filteredResidents.length > 0 && (
+          {!loading && filteredResidents.length > 0 && (
             <div className="results-summary">
               Showing {filteredResidents.length} of {residents.length} residents
             </div>
@@ -510,10 +460,11 @@ const ResidentManagement = () => {
         </>
       )}
 
-      {/* PENDING USERS TAB CONTENT */}
       {activeTab === 'pending' && (
         <>
-          {pendingUsers.length === 0 ? (
+          {loading ? (
+            <SkeletonTable rows={6} cols={5} />
+          ) : pendingUsers.length === 0 ? (
             <div className="no-users">
               <h3>No pending registrations</h3>
               <p>All user registrations have been processed.</p>
@@ -575,9 +526,7 @@ const ResidentManagement = () => {
               </table>
             </div>
           )}
-
-          {/* Results summary */}
-          {pendingUsers.length > 0 && (
+          {!loading && pendingUsers.length > 0 && (
             <div className="results-summary">
               Showing {pendingUsers.length} pending registration{pendingUsers.length !== 1 ? 's' : ''}
             </div>
@@ -585,10 +534,11 @@ const ResidentManagement = () => {
         </>
       )}
 
-      {/* ALL USERS TAB CONTENT */}
       {activeTab === 'users' && (
         <>
-          {filteredUsers.length === 0 ? (
+          {loading ? (
+            <SkeletonTable rows={8} cols={7} />
+          ) : filteredUsers.length === 0 ? (
             <div className="no-users">
               <h3>No users found</h3>
               <p>
@@ -663,9 +613,7 @@ const ResidentManagement = () => {
               </table>
             </div>
           )}
-
-          {/* Results summary */}
-          {filteredUsers.length > 0 && (
+          {!loading && filteredUsers.length > 0 && (
             <div className="results-summary">
               Showing {filteredUsers.length} of {users.length} users
             </div>

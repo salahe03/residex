@@ -444,6 +444,35 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* KPI skeletons (only tiles area shows loading) */
+.kpi-skeletons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.kpi-skeleton {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 20px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.kpi-skel-number,
+.kpi-skel-label {
+  background: linear-gradient(90deg, #eee 0%, #f6f7f8 50%, #eee 100%);
+  background-size: 200% 100%;
+  animation: kpiShimmer 1.2s linear infinite;
+  border-radius: 8px;
+}
+.kpi-skel-number { height: 26px; width: 60%; margin-bottom: 10px; }
+.kpi-skel-label  { height: 14px; width: 40%; opacity: 0.7; }
+
+@keyframes kpiShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .management-controls {
