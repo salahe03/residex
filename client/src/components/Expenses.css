@@ -1,8 +1,9 @@
 /* Container */
 .expenses-container {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding: 20px;
+  background: transparent;  /* align with unified content shell */
+  padding: 0;               /* remove extra outer padding */
+  margin: 0;                /* flush to shell edges */
 }
 
 /* Header + stats */
