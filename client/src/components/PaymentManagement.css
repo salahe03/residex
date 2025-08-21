@@ -1,8 +1,8 @@
 /* Payment Management Container */
 .payment-management-container {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding: 20px;
+  background: transparent;  /* ensure alignment with shell */
+  padding: 0;               /* remove duplicate page padding */
 }
 
 /* Header Section */
