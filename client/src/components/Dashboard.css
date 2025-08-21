@@ -246,22 +246,40 @@
 }
 
 .content-shell-body {
-  padding: 28px;
+  padding: 24px; /* was 28px: align with card/tile paddings */
   flex: 1;
   overflow-y: auto;
 }
 
-/* Remove nested container styling */
-.content-shell-body .dashboard-content,
-.content-shell-body .universal-page-container {
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0;
-  margin: 0;
-  max-width: none;
-  min-height: auto;
+/* Tenant root wrapper inside the shell: unified grid + gaps */
+.content-shell-body > .universal-page-container {
+  display: grid;
+  gap: 24px;     /* page-level spacing between sections */
+  width: 100%;
 }
+
+/* Normalize top-level page wrappers inside the unified content shell */
+.content-shell-body > .resident-management-container,
+.content-shell-body > .payment-management-container,
+.content-shell-body > .expenses-container,
+.content-shell-body > .tenant-dashboard,
+.content-shell-body > .dashboard-content,
+.content-shell-body > .universal-page-container {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Consistent vertical rhythm for direct children (sections/blocks) */
+.content-shell-body > * + * { margin-top: 24px; }
+
+/* Prevent first/last child spacing mismatches across pages */
+.content-shell-body > :first-child { margin-top: 0 !important; }
+.content-shell-body > :last-child  { margin-bottom: 0 !important; }
 
 /* === ANIMATIONS === */
 .page-fade {
@@ -294,7 +312,7 @@
   .content-shell { border-radius: 16px; }
   .content-shell-header { padding: 16px 20px 12px; }
   .content-title { font-size: 22px; }
-  .content-shell-body { padding: 20px; }
+  .content-shell-body { padding: 16px; }
 
   .page-content { padding: 0; }
 
