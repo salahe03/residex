@@ -34,23 +34,19 @@
 
 .sidebar-header {
   padding: 24px 20px;
-  border-bottom: 1px solid #f1f3f6;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  
-  /* Add large rounded corner to top-right */
-  border-top-right-radius: 60px;
-  
-
-  border-right: none;
-  
- 
   position: relative;
-  z-index: 101; 
+  z-index: 101;
+  
+  /* REMOVE the border-radius that isn't working */
+  border-top-right-radius: 0;
+  border-right: none;
+  border-bottom: none;
 }
 
 .sidebar-close {
@@ -81,7 +77,7 @@
   margin: 0;
   padding: 8px;
   display: grid;
-  gap: 4px;
+  gap: 10px; /* was 4px */
   background: #f8f9fc;
   border: 1px solid #eef1f6;
   border-radius: 16px;
@@ -226,6 +222,7 @@
   top: 0;
   z-index: 100;
   flex-shrink: 0;
+  position: relative;
 }
 
 .mobile-menu-btn {
@@ -253,10 +250,15 @@
 /* === PAGE CONTENT - SCROLLABLE AREA === */
 .page-content {
   flex: 1;
-  padding: 32px;
+  padding: 40px; /* was 32px */
   overflow-y: auto;
   background: #f8f9fa;
+  gap: 24px; /* add spacing between children */
 }
+
+/* Add vertical rhythm inside content containers */
+.dashboard-content > * + * { margin-top: 20px; }
+.universal-page-container > * + * { margin-top: 20px; }
 
 /* === CONTENT CONTAINERS - ROUNDED === */
 .universal-page-container {
@@ -363,6 +365,7 @@
   
   .page-content {
     padding: 24px 20px;
+    gap: 16px; /* keep comfortable spacing on mobile */
   }
   
   .universal-page-container,
@@ -416,4 +419,61 @@
     opacity: 1; 
     transform: translateY(0); 
   }
+}
+
+/* === SIDEBAR AND HEADER INTEGRATION === */
+/* 1. First, remove all current rounded corners */
+.sidebar-header {
+  padding: 24px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 101;
+  
+  /* REMOVE the border-radius that isn't working */
+  border-top-right-radius: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+/* 2. Fix the integrated header - REMOVE any border-radius */
+.integrated-header {
+  background: #ffffff;
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid #f1f3f6;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* 3. ADD THIS NEW ELEMENT - The curved connector piece */
+.header-sidebar-connector {
+  position: absolute;
+  width: 60px;  
+  height: 60px;
+  background-color: #ffffff;
+  top: 0;
+  left: 0;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.header-sidebar-connector::before {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  top: -60px;
+  left: -60px;
+  background-color: #764ba2; /* Match sidebar gradient end color */
+  border-radius: 60px;
 }
