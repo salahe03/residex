@@ -39,13 +39,16 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
+    let content;
     switch (currentView) {
       case 'resident-management':
-        return <ResidentManagement />;
+        content = <ResidentManagement />;
+        break;
       case 'payments':
-        return <PaymentManagement />;
+        content = <PaymentManagement />;
+        break;
       case 'expenses':
-        return isAdmin ? (
+        content = isAdmin ? (
           <Expenses />
         ) : (
           <div className="dashboard-content">
@@ -55,8 +58,9 @@ const Dashboard = () => {
             </div>
           </div>
         );
+        break;
       default:
-        return isAdmin ? (
+        content = isAdmin ? (
           <div className="dashboard-content">
             <div className="welcome-card">
               <h2>Welcome to Residex</h2>
@@ -75,7 +79,20 @@ const Dashboard = () => {
         ) : (
           <TenantDashboard onNavigate={(v) => setCurrentView(v)} />
         );
+        break;
     }
+
+    // Wrap ALL content (admin and tenant) in the content shell with title
+    return (
+      <section className="content-shell">
+        <div className="content-shell-header">
+          <h1 className="content-title">{getPageTitle()}</h1>
+        </div>
+        <div className="content-shell-body">
+          {content}
+        </div>
+      </section>
+    );
   };
 
   return (
@@ -167,18 +184,7 @@ const Dashboard = () => {
         </aside>
 
         <div className="main-area">
-          <header className="integrated-header">
-            <button 
-              className="mobile-menu-btn"
-              onClick={() => setSidebarOpen(true)}
-            >
-              ☰
-            </button>
-            <div className="page-title-integrated">
-              {getPageTitle()}
-            </div>
-          </header>
-
+          {/* The header is now removed entirely */}
           <main className="page-content page-fade">
             {renderContent()}
           </main>
