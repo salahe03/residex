@@ -13,9 +13,12 @@
   margin-bottom: 30px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  position: relative; /* new: for indicator positioning */
 }
 
+/* Modern tab look + smoother interactions */
 .tab-button {
+  --accent: #667eea; /* default, overridden inline per-tab */
   background: transparent;
   border: none;
   padding: 16px 24px;
@@ -23,14 +26,15 @@
   font-weight: 600;
   color: #666;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: color 180ms, background-color 180ms, transform 180ms;
   position: relative;
-  border-bottom: 3px solid transparent;
+  border-bottom: 3px solid transparent; /* visual fallback */
   flex: 1;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px; /* space for the dot */
 }
 
 .tab-button:hover {
@@ -39,20 +43,48 @@
 }
 
 .tab-button.active {
-  color: #667eea;
-  border-bottom: 3px solid #667eea;
+  color: var(--accent);
+  border-bottom-color: transparent; /* indicator replaces this */
 }
 
+/* Little colored dot */
+.tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgba(0,0,0,0);
+  transform: scale(0.6);
+  opacity: 0.0;
+  transition: transform 200ms cubic-bezier(.2,.8,.2,1), opacity 200ms, box-shadow 200ms;
+}
+
+.tab-button:hover .tab-dot {
+  opacity: 0.5;
+  transform: scale(0.8);
+}
+
+.tab-button.active .tab-dot {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Sliding underline indicator */
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: translateX(0);
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1), width 320ms cubic-bezier(.2,.8,.2,1), background-color 200ms;
+  will-change: transform, width;
+}
+
+/* Keep notification badge spacing tidy with new dot */
 .notification-badge {
-  background: #f44336;
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
   margin-left: 8px;
 }
 

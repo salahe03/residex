@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { residentService } from '../services/residentService';
 import { userService } from '../services/userService';
 import AddResident from './AddResident';
@@ -83,6 +83,32 @@ const ResidentManagement = () => {
       ))}
     </div>
   );
+
+  // --- New: animated tab indicator ---
+  const tabsRef = useRef(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, color: '#6366f1' });
+
+  const ACCENTS = {
+    residents: '#6366f1', // indigo
+    pending:   '#f59e0b', // orange
+    users:     '#10b981', // green
+  };
+
+  const updateIndicator = useCallback(() => {
+    const el = tabsRef.current?.querySelector('.tab-button.active');
+    const wrap = tabsRef.current;
+    if (!el || !wrap) return;
+    const left = el.offsetLeft;
+    const width = el.offsetWidth;
+    const color = ACCENTS[activeTab] || '#6366f1';
+    setIndicator({ left, width, color });
+  }, [activeTab]);
+
+  useEffect(() => {
+    updateIndicator();
+    window.addEventListener('resize', updateIndicator);
+    return () => window.removeEventListener('resize', updateIndicator);
+  }, [updateIndicator]);
 
   // =====================
   // RESIDENTS FUNCTIONS
@@ -248,28 +274,44 @@ const ResidentManagement = () => {
   return (
     <div className="universal-page-container">
       {/* Tab Navigation */}
-      <div className="management-tabs">
-        <button 
+      <div className="management-tabs" ref={tabsRef}>
+        <button
           className={`tab-button ${activeTab === 'residents' ? 'active' : ''}`}
           onClick={() => setActiveTab('residents')}
+          style={{ '--accent': ACCENTS.residents }}
         >
+          <span className="tab-dot" aria-hidden />
           🏠 Residents
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'pending' ? 'active' : ''}`}
           onClick={() => setActiveTab('pending')}
+          style={{ '--accent': ACCENTS.pending }}
         >
-          ⏳ Pending Registrations 
+          <span className="tab-dot" aria-hidden />
+          ⏳ Pending Registrations
           {stats && stats.pendingUsers > 0 && (
             <span className="notification-badge">{stats.pendingUsers}</span>
           )}
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
+          style={{ '--accent': ACCENTS.users }}
         >
+          <span className="tab-dot" aria-hidden />
           👥 All Users
         </button>
+
+        {/* Sliding indicator */}
+        <span
+          className="tab-indicator"
+          style={{
+            width: indicator.width,
+            transform: `translateX(${indicator.left}px)`,
+            background: indicator.color
+          }}
+        />
       </div>
 
       {/* KPI tiles per tab: show skeleton while loading */}
