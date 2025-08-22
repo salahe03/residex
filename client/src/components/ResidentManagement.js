@@ -7,6 +7,8 @@ import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import './ResidentManagement.css';
 import './ui/KpiTiles.css';
 import SkeletonTable from './ui/SkeletonTable';
+import DropdownMenu from './ui/DropdownMenu';
+import { FiEdit, FiTrash, FiEye, FiUserCheck, FiUserX, FiFilter } from 'react-icons/fi';
 
 const ResidentManagement = () => {
   // Active tab state
@@ -35,6 +37,42 @@ const ResidentManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
+
+  // Filter dropdown options
+  const residentFilterOptions = [
+    { id: 'all', text: 'All Residents', onClick: () => setFilterStatus('all') },
+    { id: 'owner', text: 'Owners Only', onClick: () => setFilterStatus('owner') },
+    { id: 'tenant', text: 'Tenants Only', onClick: () => setFilterStatus('tenant') }
+  ];
+
+  const userFilterOptions = [
+    { id: 'all', text: 'All Users', onClick: () => setUserFilterStatus('all') },
+    { id: 'active', text: 'Active Only', onClick: () => setUserFilterStatus('active') },
+    { id: 'inactive', text: 'Inactive Only', onClick: () => setUserFilterStatus('inactive') },
+    { id: 'admin', text: 'Admins Only', onClick: () => setUserFilterStatus('admin') },
+    { id: 'tenant', text: 'Tenants Only', onClick: () => setUserFilterStatus('tenant') },
+    { id: 'landlord', text: 'Landlords Only', onClick: () => setUserFilterStatus('landlord') }
+  ];
+
+  // Get current filter display text
+  const getResidentFilterText = () => {
+    switch (filterStatus) {
+      case 'owner': return 'Owners Only';
+      case 'tenant': return 'Tenants Only';
+      default: return 'All Residents';
+    }
+  };
+
+  const getUserFilterText = () => {
+    switch (userFilterStatus) {
+      case 'active': return 'Active Only';
+      case 'inactive': return 'Inactive Only';
+      case 'admin': return 'Admins Only';
+      case 'tenant': return 'Tenants Only';
+      case 'landlord': return 'Landlords Only';
+      default: return 'All Users';
+    }
+  };
 
   // Memoize the loadData function with useCallback
   const loadData = useCallback(async () => {
@@ -365,15 +403,18 @@ const ResidentManagement = () => {
               className="search-input"
             />
             
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Residents</option>
-              <option value="owner">Owners Only</option>
-              <option value="tenant">Tenants Only</option>
-            </select>
+            <DropdownMenu
+              trigger={
+                <span className="filter-dropdown-trigger">
+                  <FiFilter />
+                  {getResidentFilterText()}
+                </span>
+              }
+              options={residentFilterOptions}
+              size="md"
+              align="left"
+              className="filter-dropdown"
+            />
           </div>
           
           <button onClick={handleAddResident} className="add-resident-btn">
@@ -393,18 +434,18 @@ const ResidentManagement = () => {
               className="search-input"
             />
             
-            <select
-              value={userFilterStatus}
-              onChange={(e) => setUserFilterStatus(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Users</option>
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive Only</option>
-              <option value="admin">Admins Only</option>
-              <option value="tenant">Tenants Only</option>
-              <option value="landlord">Landlords Only</option>
-            </select>
+            <DropdownMenu
+              trigger={
+                <span className="filter-dropdown-trigger">
+                  <FiFilter />
+                  {getUserFilterText()}
+                </span>
+              }
+              options={userFilterOptions}
+              size="md"
+              align="left"
+              className="filter-dropdown"
+            />
           </div>
         </div>
       )}
@@ -472,21 +513,32 @@ const ResidentManagement = () => {
                         })}
                       </td>
                       <td className="actions-cell">
-                        <button
-                          onClick={() => handleEditResident(resident)}
-                          className="edit-btn"
-                          title="Edit resident"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleDeleteResident(resident._id, resident.name)}
-                          className="delete-btn"
-                          disabled={deletingResident === resident._id}
-                          title="Delete resident"
-                        >
-                          {deletingResident === resident._id ? '⏳' : '🗑️'}
-                        </button>
+                        <DropdownMenu
+                          size="sm"
+                          options={[
+                            {
+                              id: 'view',
+                              text: 'View Details',
+                              icon: FiEye,
+                              onClick: () => console.log('View', resident.name)
+                            },
+                            {
+                              id: 'edit',
+                              text: 'Edit',
+                              icon: FiEdit,
+                              onClick: () => handleEditResident(resident)
+                            },
+                            { divider: true },
+                            {
+                              id: 'delete',
+                              text: 'Delete',
+                              icon: FiTrash,
+                              color: 'danger',
+                              onClick: () => handleDeleteResident(resident._id, resident.name),
+                              disabled: deletingResident === resident._id
+                            }
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -545,22 +597,27 @@ const ResidentManagement = () => {
                         })}
                       </td>
                       <td className="actions-cell">
-                        <button
-                          onClick={() => handleApproveUser(user._id, user.name)}
-                          className="approve-btn"
-                          disabled={processingUser === user._id}
-                          title="Approve user"
-                        >
-                          {processingUser === user._id ? '⏳' : '✅'}
-                        </button>
-                        <button
-                          onClick={() => handleRejectUser(user._id, user.name)}
-                          className="reject-btn"
-                          disabled={processingUser === user._id}
-                          title="Reject user"
-                        >
-                          {processingUser === user._id ? '⏳' : '❌'}
-                        </button>
+                        <DropdownMenu
+                          size="sm"
+                          options={[
+                            {
+                              id: 'approve',
+                              text: 'Approve',
+                              icon: FiUserCheck,
+                              color: 'success',
+                              onClick: () => handleApproveUser(user._id, user.name),
+                              disabled: processingUser === user._id
+                            },
+                            {
+                              id: 'reject',
+                              text: 'Reject',
+                              icon: FiUserX,
+                              color: 'danger',
+                              onClick: () => handleRejectUser(user._id, user.name),
+                              disabled: processingUser === user._id
+                            }
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
