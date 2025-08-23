@@ -48,7 +48,7 @@ const DropdownMenu = ({
             <motion.span 
               className="dropdown-chevron"
               variants={chevronVariants}
-              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <FiChevronDown />
             </motion.span>
@@ -65,10 +65,10 @@ const DropdownMenu = ({
             exit="closed"
             variants={menuVariants}
             transition={{
-              duration: 0.4,
-              ease: [0.25, 0.46, 0.45, 0.94], // More natural cubic-bezier
+              duration: 0.18,
+              ease: [0.25, 0.1, 0.25, 1],
               when: "beforeChildren",
-              staggerChildren: 0.08
+              staggerChildren: 0.02
             }}
           >
             {options.map((option, index) => (
@@ -99,8 +99,8 @@ const DropdownOption = ({ option, onClick }) => {
       disabled={disabled}
       variants={optionVariants}
       transition={{ 
-        duration: 0.25, 
-        ease: [0.25, 0.46, 0.45, 0.94] 
+        duration: 0.12, 
+        ease: [0.25, 0.1, 0.25, 1] 
       }}
       whileHover={disabled ? {} : { x: 2 }}
       whileTap={disabled ? {} : { scale: 0.98 }}
@@ -109,7 +109,7 @@ const DropdownOption = ({ option, onClick }) => {
         <motion.span 
           className="dropdown-option-icon"
           variants={iconVariants}
-          transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.12, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <Icon />
         </motion.span>
@@ -119,7 +119,7 @@ const DropdownOption = ({ option, onClick }) => {
   );
 };
 
-// Enhanced animation variants with natural easing
+// Enhanced animation variants with faster, more natural easing
 const chevronVariants = {
   open: { rotate: 180 },
   closed: { rotate: 0 }
@@ -131,21 +131,21 @@ const menuVariants = {
     scale: 1,
     y: 0,
     transition: {
-      duration: 0.4,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      duration: 0.18,
+      ease: [0.25, 0.1, 0.25, 1], // Faster, more natural cubic-bezier
       when: "beforeChildren",
-      staggerChildren: 0.08
+      staggerChildren: 0.02 // Much faster stagger
     }
   },
   closed: {
     opacity: 0,
-    scale: 0.95,
-    y: -10,
+    scale: 0.96,
+    y: -8,
     transition: {
-      duration: 0.25,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      duration: 0.12,
+      ease: [0.25, 0.1, 0.25, 1],
       when: "afterChildren",
-      staggerChildren: 0.05,
+      staggerChildren: 0.01,
       staggerDirection: -1
     }
   }
@@ -157,18 +157,18 @@ const optionVariants = {
     y: 0,
     x: 0,
     transition: {
-      duration: 0.25,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      duration: 0.12,
+      ease: [0.25, 0.1, 0.25, 1],
       when: "beforeChildren"
     }
   },
   closed: {
     opacity: 0,
-    y: -8,
-    x: -4,
+    y: -4,
+    x: -2,
     transition: {
-      duration: 0.2,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      duration: 0.08,
+      ease: [0.25, 0.1, 0.25, 1],
       when: "afterChildren"
     }
   }
@@ -178,12 +178,12 @@ const iconVariants = {
   open: { 
     scale: 1, 
     rotate: 0,
-    transition: { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }
+    transition: { duration: 0.12, ease: [0.25, 0.1, 0.25, 1] }
   },
   closed: { 
-    scale: 0.8, 
-    rotate: -10,
-    transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }
+    scale: 0.9, 
+    rotate: -5,
+    transition: { duration: 0.08, ease: [0.25, 0.1, 0.25, 1] }
   }
 };
 
