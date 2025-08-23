@@ -5,6 +5,8 @@ import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
 import SkeletonTable from './ui/SkeletonTable';
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
+import DropdownMenu from './ui/DropdownMenu';
+import { FiFilter } from 'react-icons/fi';
 import './ui/KpiTiles.css';
 import './PaymentManagement.css';
 
@@ -29,6 +31,28 @@ const PaymentManagement = () => {
   const [showSubmitPayment, setShowSubmitPayment] = useState(false);
   const [showConfirmPayment, setShowConfirmPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // Status filter options for dropdown
+  const statusFilterOptions = [
+    { id: 'all', text: 'All Status', onClick: () => setFilterStatus('all') },
+    { id: 'pending', text: 'Pending', onClick: () => setFilterStatus('pending') },
+    { id: 'submitted', text: 'Submitted', onClick: () => setFilterStatus('submitted') },
+    { id: 'paid', text: 'Paid', onClick: () => setFilterStatus('paid') },
+    { id: 'overdue', text: 'Overdue', onClick: () => setFilterStatus('overdue') },
+    { id: 'rejected', text: 'Rejected', onClick: () => setFilterStatus('rejected') }
+  ];
+
+  // Get current filter display text
+  const getStatusFilterText = () => {
+    switch (filterStatus) {
+      case 'pending': return 'Pending';
+      case 'submitted': return 'Submitted';
+      case 'paid': return 'Paid';
+      case 'overdue': return 'Overdue';
+      case 'rejected': return 'Rejected';
+      default: return 'All Status';
+    }
+  };
 
   // Helper function to calculate tenant stats from payments
   const calculateTenantStats = useCallback((paymentList) => {
@@ -346,18 +370,18 @@ const PaymentManagement = () => {
             className="search-input"
           />
           
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="submitted">Submitted</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          <DropdownMenu
+            trigger={
+              <span className="filter-dropdown-trigger">
+                <FiFilter />
+                {getStatusFilterText()}
+              </span>
+            }
+            options={statusFilterOptions}
+            size="md"
+            align="left"
+            className="filter-dropdown"
+          />
         </div>
         
         {/* Admin Only: Create New Payment Button */}
