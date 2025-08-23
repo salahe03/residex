@@ -6,7 +6,7 @@ import CreatePayment from './CreatePayment';
 import SkeletonTable from './ui/SkeletonTable';
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import DropdownMenu from './ui/DropdownMenu';
-import { FiFilter } from 'react-icons/fi';
+import { FiChevronDown } from 'react-icons/fi'; // Changed from FiFilter to FiChevronDown
 import './ui/KpiTiles.css';
 import './PaymentManagement.css';
 
@@ -373,7 +373,7 @@ const PaymentManagement = () => {
           <DropdownMenu
             trigger={
               <span className="filter-dropdown-trigger">
-                <FiFilter />
+                <FiChevronDown />
                 {getStatusFilterText()}
               </span>
             }
