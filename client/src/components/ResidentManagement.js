@@ -397,7 +397,7 @@ const ResidentManagement = () => {
           <div className="search-filters">
             <input
               type="text"
-              placeholder="🔍 Search by name, email, or apartment..."
+              placeholder="Search by name, email, or apartment..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"

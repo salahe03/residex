@@ -224,11 +224,29 @@
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   white-space: nowrap;
+  /* NEW: enable swipe glow like create-bulk-btn */
+  position: relative;
+  overflow: hidden;
+}
+
+.add-resident-btn::before { /* NEW */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: left 0.5s ease;
 }
 
 .add-resident-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.add-resident-btn:hover::before { /* NEW */
+  left: 100%;
 }
 
 /* Error Message */
@@ -294,11 +312,29 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  /* NEW: same swipe glow for empty state button */
+  position: relative;
+  overflow: hidden;
+}
+
+.add-first-resident-btn::before { /* NEW */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: left 0.5s ease;
 }
 
 .add-first-resident-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.add-first-resident-btn:hover::before { /* NEW */
+  left: 100%;
 }
 
 /* Tables */

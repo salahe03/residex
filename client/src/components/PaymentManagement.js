@@ -364,7 +364,7 @@ const PaymentManagement = () => {
         <div className="search-filters">
           <input
             type="text"
-            placeholder="🔍 Search payments..."
+            placeholder="Search payments..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
