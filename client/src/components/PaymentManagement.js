@@ -413,8 +413,8 @@ const PaymentManagement = () => {
           </p>
         </div>
       ) : (
-        <div className="payment-table-container">
-          <table className="payment-table">
+        <div className="payment-table-container payments-table-wrap">
+          <table className="payment-table payments-table">
             <thead>
               <tr>
                 {/* Admin sees resident column, users don't */}
