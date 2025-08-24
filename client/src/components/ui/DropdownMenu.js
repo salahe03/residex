@@ -13,6 +13,7 @@ const DropdownMenu = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const isCustomTrigger = Boolean(trigger); // NEW
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,11 +37,14 @@ const DropdownMenu = ({
   return (
     <div className={`dropdown-wrapper ${className}`} ref={dropdownRef}>
       <motion.button
-        className={`dropdown-trigger ${size} ${disabled ? 'disabled' : ''}`}
+        className={`dropdown-trigger ${size} ${disabled ? 'disabled' : ''} ${isCustomTrigger ? 'bare' : ''}`} // NEW 'bare'
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         whileTap={{ scale: disabled ? 1 : 0.98 }}
         animate={isOpen ? "open" : "closed"}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        type="button"
       >
         {trigger || (
           <>
@@ -64,12 +68,14 @@ const DropdownMenu = ({
             animate="open"
             exit="closed"
             variants={menuVariants}
+            data-state={isOpen ? 'open' : 'closed'} // NEW: sync CSS keyframes if used
             transition={{
               duration: 0.18,
               ease: [0.25, 0.1, 0.25, 1],
               when: "beforeChildren",
               staggerChildren: 0.02
             }}
+            role="menu"
           >
             {options.map((option, index) => (
               <DropdownOption

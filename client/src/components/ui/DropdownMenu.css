@@ -10,7 +10,7 @@
   gap: 8px;
   padding: 8px 12px;
   background: white;
-  border: 2px solid #e1e5e9;
+  border: 2px solid #e1e5e9; /* default button styling (kept for non-custom uses) */
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -19,9 +19,20 @@
   transition: all 0.2s ease;
 }
 
-.dropdown-trigger:hover:not(.disabled) {
-  border-color: #667eea;
-  background: #f8f9ff;
+/* NEW: when consumer supplies a custom trigger, make the host button invisible */
+.dropdown-trigger.bare {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.dropdown-trigger.bare:hover,
+.dropdown-trigger.bare:focus {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .dropdown-trigger.disabled {

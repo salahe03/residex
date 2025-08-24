@@ -81,22 +81,46 @@
   flex: 1;
   max-width: 400px;
   padding: 12px 18px;
-  border: 2px solid #e1e5e9;
+  border: none; /* Removed border to match filter dropdown */
   border-radius: 12px;
   font-size: 15px;
   font-weight: 500;
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   color: #4a5568;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* Add inner border effect to search input */
+.search-input::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: 11px;
+  pointer-events: none;
+  transition: border-color 0.25s ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
   background: #ffffff;
+}
+
+.search-input:focus::after {
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.search-input:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.search-input:hover::after {
+  border-color: rgba(102, 126, 234, 0.25);
 }
 
 .search-input::placeholder {
@@ -104,14 +128,14 @@
   font-weight: 500;
 }
 
-/* Enhanced Filter Dropdown Trigger */
+/* Enhanced Filter Dropdown Trigger - Borderless Design */
 .filter-dropdown-trigger {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 18px;
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-  border: 2px solid #e1e5e9;
+  border: none; /* Removed outer border */
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
@@ -122,7 +146,7 @@
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .filter-dropdown-trigger::before {
@@ -136,12 +160,23 @@
   opacity: 0;
   transition: opacity 0.25s ease;
   z-index: -1;
+  border-radius: inherit;
+}
+
+/* Inner border simulation */
+.filter-dropdown-trigger::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: 11px;
+  pointer-events: none;
+  transition: border-color 0.25s ease;
 }
 
 .filter-dropdown-trigger:hover {
-  border-color: #667eea;
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   color: #667eea;
 }
 
@@ -149,19 +184,25 @@
   opacity: 0.03;
 }
 
+.filter-dropdown-trigger:hover::after {
+  border-color: rgba(102, 126, 234, 0.25);
+}
+
 .filter-dropdown-trigger:active {
   transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .filter-dropdown-trigger svg {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 0.7;
+  transform: rotate(0deg);
 }
 
 .filter-dropdown-trigger:hover svg {
   opacity: 1;
   color: #667eea;
+  transform: rotate(180deg); /* Arrow animation on hover */
 }
 
 /* Enhanced Filter Dropdown Container */
@@ -174,10 +215,10 @@
   z-index: 100;
 }
 
-/* Update existing filter-select to match if still used anywhere */
+/* Update existing filter-select to match borderless design */
 .filter-select {
   padding: 12px 18px;
-  border: 2px solid #e1e5e9;
+  border: none;
   border-radius: 12px;
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   font-size: 15px;
@@ -186,20 +227,37 @@
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 160px;
   color: #4a5568;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.filter-select::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: 11px;
+  pointer-events: none;
+  transition: border-color 0.25s ease;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
 }
 
+.filter-select:focus::after {
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
 .filter-select:hover {
-  border-color: #667eea;
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.filter-select:hover::after {
+  border-color: rgba(102, 126, 234, 0.25);
 }
 
 /* Enhanced Create Button */
