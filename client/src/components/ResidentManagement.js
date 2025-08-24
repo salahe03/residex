@@ -553,7 +553,7 @@ const ResidentManagement = () => {
               </button>
             </div>
           ) : (
-            <div className="management-table-container">
+            <div className="management-table-container residents-table-wrap">
               <table className="management-table residents-table">
                 <thead>
                   <tr>

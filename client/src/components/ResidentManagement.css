@@ -374,6 +374,19 @@
   border-bottom: none;
 }
 
+/* Prevent header row from receiving hover styles (residents page tables) */
+.management-table thead tr { 
+  pointer-events: none;           /* block hover/active */
+}
+.management-table thead th { 
+  cursor: default;                /* no hand cursor */
+}
+.management-table thead tr:hover { 
+  background-color: transparent !important; 
+}
+
+/* Keep body rows hoverable (already styled for residents-table) */
+
 /* Table Cell Styles */
 .name-cell {
   font-weight: 500;
@@ -611,6 +624,124 @@
 @keyframes kpiShimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Residents table: clean, compact, card-like rows */
+.residents-table-wrap {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  padding: 8px 0; /* breathing room for row shadows */
+}
+
+/* Separate rows with spacing to create “cards” */
+.residents-table {
+  border-collapse: separate !important;
+  border-spacing: 0 10px !important; /* gap between rows */
+  background: transparent;
+  font-size: 14px;
+}
+
+/* Header: minimal, airy */
+.residents-table thead th {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 8px 12px !important;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Row “cards” */
+.residents-table tbody tr {
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.06);
+  transition: transform 160ms ease, box-shadow 200ms ease;
+}
+
+/* Compact cells + soft vertical separators */
+.residents-table tbody td {
+  padding: 14px 16px !important;
+  border: 0 !important; /* remove default row borders */
+  vertical-align: middle;
+  position: relative;
+}
+
+.residents-table tbody td + td {
+  /* subtle dividers inside the row */
+  box-shadow: inset 1px 0 0 #f3f4f6;
+}
+
+/* Rounded corners for the row-card */
+.residents-table tbody td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  box-shadow: none !important;
+}
+.residents-table tbody td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Hover lift */
+.residents-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.10);
+  background: #fff;
+}
+
+/* Tighter name/email/phone typography */
+.name-cell .resident-name {
+  font-weight: 700;
+  color: #111827;
+}
+.email-cell,
+.phone-cell,
+.date-cell {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* Apartment chip refined */
+.apartment-number {
+  background: rgba(59,130,246,0.10);
+  color: #2563eb;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Status badges more compact */
+.status-badge {
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+
+/* Actions column compact + centered */
+.residents-table .actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+.residents-table .icon-actions { gap: 6px; }
+.residents-table .icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border-color: #eef0f4;
+}
+.residents-table .icon-btn svg { width: 16px; height: 16px; }
+
+/* Row density on smaller screens */
+@media (max-width: 1024px) {
+  .residents-table { border-spacing: 0 8px !important; }
+  .residents-table tbody td { padding: 12px 14px !important; }
 }
 
 /* Responsive Design */
