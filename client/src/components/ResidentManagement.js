@@ -8,7 +8,7 @@ import './ResidentManagement.css';
 import './ui/KpiTiles.css';
 import SkeletonTable from './ui/SkeletonTable';
 import DropdownMenu from './ui/DropdownMenu';
-import { FiEdit, FiTrash, FiEye, FiUserCheck, FiUserX, FiFilter } from 'react-icons/fi';
+import { FiEdit, FiTrash, FiEye, FiUserCheck, FiUserX, FiChevronDown } from 'react-icons/fi';
 
 const ResidentManagement = () => {
   // Active tab state
@@ -406,8 +406,8 @@ const ResidentManagement = () => {
             <DropdownMenu
               trigger={
                 <span className="filter-dropdown-trigger">
-                  <FiFilter />
                   {getResidentFilterText()}
+                  <FiChevronDown />
                 </span>
               }
               options={residentFilterOptions}
@@ -437,8 +437,8 @@ const ResidentManagement = () => {
             <DropdownMenu
               trigger={
                 <span className="filter-dropdown-trigger">
-                  <FiFilter />
                   {getUserFilterText()}
+                  <FiChevronDown />
                 </span>
               }
               options={userFilterOptions}
@@ -513,32 +513,36 @@ const ResidentManagement = () => {
                         })}
                       </td>
                       <td className="actions-cell">
-                        <DropdownMenu
-                          size="sm"
-                          options={[
-                            {
-                              id: 'view',
-                              text: 'View Details',
-                              icon: FiEye,
-                              onClick: () => console.log('View', resident.name)
-                            },
-                            {
-                              id: 'edit',
-                              text: 'Edit',
-                              icon: FiEdit,
-                              onClick: () => handleEditResident(resident)
-                            },
-                            { divider: true },
-                            {
-                              id: 'delete',
-                              text: 'Delete',
-                              icon: FiTrash,
-                              color: 'danger',
-                              onClick: () => handleDeleteResident(resident._id, resident.name),
-                              disabled: deletingResident === resident._id
-                            }
-                          ]}
-                        />
+                        <div className="icon-actions">
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            data-tip="View details"
+                            aria-label="View details"
+                            onClick={() => console.log('View', resident.name)}
+                          >
+                            <FiEye />
+                          </button>
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            data-tip="Edit resident"
+                            aria-label="Edit resident"
+                            onClick={() => handleEditResident(resident)}
+                          >
+                            <FiEdit />
+                          </button>
+                          <button
+                            type="button"
+                            className="icon-btn danger"
+                            data-tip="Delete resident"
+                            aria-label="Delete resident"
+                            onClick={() => handleDeleteResident(resident._id, resident.name)}
+                            disabled={deletingResident === resident._id}
+                          >
+                            <FiTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
