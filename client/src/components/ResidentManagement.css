@@ -517,46 +517,56 @@
   box-shadow: none;
 }
 
-/* Modern tooltip (matching TenantDashboard chart tooltip look) */
-.icon-btn[data-tip]::after {
-  content: attr(data-tip);
+/* Disable older pseudo-element tooltip (prevents double tooltips and clipping) */
+.icon-btn[data-tip]::after,
+.icon-btn[data-tip]::before {
+  display: none;
+}
+
+/* Body-level UI tooltip (matching TenantDashboard style, not clipped) */
+.ui-tooltip {
   position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%) translateY(4px) scale(0.98);
-  opacity: 0;
   pointer-events: none;
   background: #111827;
   color: #fff;
+  border-radius: 12px;
   padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
   box-shadow: 0 14px 36px rgba(0,0,0,0.28);
-  transition: opacity 160ms ease, transform 200ms cubic-bezier(0.22,1,0.36,1);
-  z-index: 20;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 12px)) translateY(8px) scale(0.98);
+  transition: opacity 160ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 10000; /* above tables and cards */
+  will-change: transform, opacity;
+}
+
+.ui-tooltip.visible {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 12px)) translateY(0) scale(1);
+}
+
+.ui-tooltip-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.2px;
   white-space: nowrap;
 }
-.icon-btn[data-tip]::before {
+
+/* Proper triangle caret (no more rotated square artifact) */
+.ui-tooltip::after {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 4px);
-  width: 10px;
-  height: 10px;
-  transform: translateX(-50%) rotate(45deg);
-  background: #111827;
-  border-radius: 2px;
-  opacity: 0;
-  transition: opacity 160ms ease;
-  z-index: 19;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-.icon-btn:hover::after,
-.icon-btn:hover::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0) scale(1);
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #111827; /* inverted triangle below tooltip */
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
 }
 
 /* Keep actions cell centered on small screens */

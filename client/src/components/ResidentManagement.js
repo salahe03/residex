@@ -10,6 +10,85 @@ import SkeletonTable from './ui/SkeletonTable';
 import DropdownMenu from './ui/DropdownMenu';
 import { FiEdit, FiTrash, FiEye, FiUserCheck, FiUserX, FiChevronDown } from 'react-icons/fi';
 
+// Body-level tooltip for icon buttons (uses data-tip)
+const UiTooltipLayer = () => {
+  const elRef = useRef(null);
+
+  useEffect(() => {
+    // Create tooltip element once
+    const el = document.createElement('div');
+    el.className = 'ui-tooltip';
+    const inner = document.createElement('div');
+    inner.className = 'ui-tooltip-inner';
+    el.appendChild(inner);
+    document.body.appendChild(el);
+    elRef.current = el;
+
+    let activeTarget = null;
+
+    // NEW: position relative to the hovered icon (top-center)
+    const positionToTarget = (target) => {
+      if (!elRef.current || !target) return;
+      const r = target.getBoundingClientRect();
+      const x = r.left + r.width / 2 + window.scrollX;
+      const y = r.top + window.scrollY; // anchor to top edge; CSS lifts it above
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    };
+
+    const show = (target) => {
+      activeTarget = target;
+      inner.textContent = target.getAttribute('data-tip') || '';
+      positionToTarget(target);
+      requestAnimationFrame(() => el.classList.add('visible'));
+    };
+
+    const hide = () => {
+      activeTarget = null;
+      el.classList.remove('visible');
+    };
+
+    // Event delegation so it works for dynamic rows
+    const onMouseOver = (e) => {
+      const target = e.target.closest('.icon-btn[data-tip]');
+      if (!target) return;
+      show(target);
+    };
+    const onMouseOut = (e) => {
+      if (activeTarget && !e.relatedTarget?.closest('.icon-btn[data-tip]')) {
+        hide();
+      }
+    };
+
+    // Keep anchored position on minor movements/scroll/resize (no pointer-follow)
+    const onMouseMove = () => {
+      if (activeTarget) positionToTarget(activeTarget);
+    };
+    const onScrollOrResize = () => {
+      if (activeTarget) positionToTarget(activeTarget);
+    };
+
+    document.addEventListener('mouseover', onMouseOver, true);
+    document.addEventListener('mouseout', onMouseOut, true);
+    document.addEventListener('mousemove', onMouseMove, true);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+
+    return () => {
+      document.removeEventListener('mouseover', onMouseOver, true);
+      document.removeEventListener('mouseout', onMouseOut, true);
+      document.removeEventListener('mousemove', onMouseMove, true);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (elRef.current && elRef.current.parentNode) {
+        elRef.current.parentNode.removeChild(elRef.current);
+      }
+    };
+  }, []);
+
+  return null;
+};
+
 const ResidentManagement = () => {
   // Active tab state
   const [activeTab, setActiveTab] = useState('residents');
@@ -311,6 +390,8 @@ const ResidentManagement = () => {
   // Main component render
   return (
     <div className="universal-page-container">
+      {/* Mount once to provide body-level tooltips */}
+      <UiTooltipLayer />
       {/* Tab Navigation */}
       <div className="management-tabs" ref={tabsRef}>
         <button
