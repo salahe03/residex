@@ -270,11 +270,31 @@ const Expenses = () => {
                       )}
                     </td>
                     <td className="actions-cell">
-                      {remaining > 0 && (
-                        <button className="allocate-btn" onClick={() => openAllocate(exp)} title="Allocate fund to this expense">💸</button>
-                      )}
-                      <button className="edit-btn" onClick={() => handleEdit(exp)} title="Edit">✏️</button>
-                      <button className="delete-btn" onClick={() => handleDelete(exp)} title="Delete">🗑️</button>
+                      <div className="icon-actions">
+                        {remaining > 0 && (
+                          <button
+                            className="icon-btn allocate-btn"
+                            onClick={() => openAllocate(exp)}
+                            title="Allocate fund to this expense"
+                          >
+                            💸
+                          </button>
+                        )}
+                        <button
+                          className="icon-btn edit-btn"
+                          onClick={() => handleEdit(exp)}
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="icon-btn danger delete-btn"
+                          onClick={() => handleDelete(exp)}
+                          title="Delete"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

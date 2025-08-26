@@ -6,9 +6,74 @@ import CreatePayment from './CreatePayment';
 import SkeletonTable from './ui/SkeletonTable';
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import DropdownMenu from './ui/DropdownMenu';
-import { FiChevronDown } from 'react-icons/fi'; // Changed from FiFilter to FiChevronDown
+import { FiChevronDown, FiInfo, FiCheck, FiX } from 'react-icons/fi';
 import './ui/KpiTiles.css';
 import './PaymentManagement.css';
+
+// Body-level tooltip (anchored to top-center of the target)
+const UiTooltipLayer = () => {
+  const elRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const el = document.createElement('div');
+    el.className = 'ui-tooltip';
+    const inner = document.createElement('div');
+    inner.className = 'ui-tooltip-inner';
+    el.appendChild(inner);
+    document.body.appendChild(el);
+    elRef.current = el;
+
+    let activeTarget = null;
+
+    const positionToTarget = (target) => {
+      if (!elRef.current || !target) return;
+      const r = target.getBoundingClientRect();
+      const x = r.left + r.width / 2 + window.scrollX;
+      const y = r.top + window.scrollY;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    };
+
+    const show = (target) => {
+      activeTarget = target;
+      inner.textContent = target.getAttribute('data-tip') || '';
+      positionToTarget(target);
+      requestAnimationFrame(() => el.classList.add('visible'));
+    };
+
+    const hide = () => {
+      activeTarget = null;
+      el.classList.remove('visible');
+    };
+
+    const onMouseOver = (e) => {
+      const target = e.target.closest('.pm-icon-btn[data-tip]');
+      if (!target) return;
+      show(target);
+    };
+    const onMouseOut = (e) => {
+      if (activeTarget && !e.relatedTarget?.closest('.pm-icon-btn[data-tip]')) hide();
+    };
+    const onScrollOrResize = () => {
+      if (activeTarget) positionToTarget(activeTarget);
+    };
+
+    document.addEventListener('mouseover', onMouseOver, true);
+    document.addEventListener('mouseout', onMouseOut, true);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+
+    return () => {
+      document.removeEventListener('mouseover', onMouseOver, true);
+      document.removeEventListener('mouseout', onMouseOut, true);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (elRef.current?.parentNode) elRef.current.parentNode.removeChild(elRef.current);
+    };
+  }, []);
+
+  return null;
+};
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
@@ -265,8 +330,18 @@ const PaymentManagement = () => {
     );
   }
 
+  // Payment info tooltip content
+  const getPaymentInfoTip = (p) => {
+    const info = [];
+    if (p.paymentSubmission?.submittedAt) info.push(`Submitted: ${formatDate(p.paymentSubmission.submittedAt)}`);
+    if (p.confirmation?.confirmedAt) info.push(`Confirmed: ${formatDate(p.confirmation.confirmedAt)}`);
+    if (p.status === 'rejected' && p.confirmation?.adminNotes) info.push(`Reason: ${p.confirmation.adminNotes}`);
+    return info.join('\n') || 'No additional details';
+  };
+
   return (
-    <div className="universal-page-container">
+    <div className="payment-management-container">
+      <UiTooltipLayer />
       {/* ADMIN STATS - Keep existing */}
       {stats && isAdmin && (
         <KpiTiles
@@ -417,8 +492,8 @@ const PaymentManagement = () => {
           <table className="payment-table payments-table">
             <thead>
               <tr>
-                {/* Admin sees resident column, users don't */}
                 {isAdmin && <th>Resident</th>}
+                {isAdmin && <th>Apt</th>}
                 <th>Description</th>
                 <th>Period</th>
                 <th>Amount</th>
@@ -430,13 +505,16 @@ const PaymentManagement = () => {
             <tbody>
               {filteredPayments.map((payment) => (
                 <tr key={payment._id}>
-                  {/* Admin sees resident info */}
                   {isAdmin && (
                     <td className="resident-cell">
                       <div className="resident-info">
                         <span className="resident-name">{payment.resident?.name}</span>
-                        <span className="resident-apartment">{payment.resident?.apartmentNumber}</span>
                       </div>
+                    </td>
+                  )}
+                  {isAdmin && (
+                    <td className="apt-cell">
+                      <span className="apt-chip">{payment.resident?.apartmentNumber || '-'}</span>
                     </td>
                   )}
                   <td className="description-cell">{payment.description}</td>
@@ -445,22 +523,22 @@ const PaymentManagement = () => {
                   <td className="date-cell">{formatDate(payment.dueDate)}</td>
                   <td className="status-cell">
                     <span className={`status-badge ${getStatusBadge(payment.status)}`}>
-                      {payment.status === 'submitted' ? 'Awaiting Confirmation' : 
+                      {payment.status === 'submitted' ? 'Awaiting Confirmation' :
                        payment.status === 'rejected' ? 'Rejected' :
                        payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                     </span>
-                    {payment.confirmation?.confirmedAt && (
-                      <div className="payment-date">Confirmed: {formatDate(payment.confirmation.confirmedAt)}</div>
-                    )}
-                    {payment.paymentSubmission?.submittedAt && (
-                      <div className="payment-date">Submitted: {formatDate(payment.paymentSubmission.submittedAt)}</div>
-                    )}
-                    {payment.status === 'rejected' && payment.confirmation?.adminNotes && (
-                      <div className="rejection-reason">Reason: {payment.confirmation.adminNotes}</div>
-                    )}
                   </td>
                   <td className="actions-cell">
-                    {/* Tenant Actions */}
+                    <button
+                      type="button"
+                      className="pm-icon-btn"
+                      data-tip={getPaymentInfoTip(payment)}
+                      aria-label="Payment info"
+                    >
+                      <FiInfo />
+                    </button>
+
+                    {/* Tenant action stays the same */}
                     {!isAdmin && payment.status === 'pending' && (
                       <button
                         onClick={() => handleSubmitPayment(payment)}
@@ -471,25 +549,27 @@ const PaymentManagement = () => {
                         {processingPayment === payment._id ? '⏳' : '💳 Pay'}
                       </button>
                     )}
-                    
-                    {/* Admin Actions */}
+
+                    {/* Admin icon actions: permanently colored with glow on hover */}
                     {isAdmin && payment.status === 'submitted' && (
                       <div className="admin-actions">
                         <button
                           onClick={() => handleConfirmPayment(payment)}
-                          className="confirm-btn"
+                          className="pm-icon-btn colored success"
                           disabled={processingPayment === payment._id}
+                          aria-label="Confirm payment"
                           title="Confirm payment"
                         >
-                          {processingPayment === payment._id ? '⏳' : '✅'}
+                          <FiCheck />
                         </button>
                         <button
                           onClick={() => handleRejectPayment(payment)}
-                          className="reject-btn"
+                          className="pm-icon-btn colored danger"
                           disabled={processingPayment === payment._id}
+                          aria-label="Reject payment"
                           title="Reject payment"
                         >
-                          ❌
+                          <FiX />
                         </button>
                       </div>
                     )}

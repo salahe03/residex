@@ -935,19 +935,20 @@
   }
 }
 
-/* Payments table: clean, compact, card-like rows (matches Residents) */
+/* Payments table — mirror Residents card rows */
+.payment-table-container,
 .payments-table-wrap {
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: visible;
-  padding: 8px 0; /* room for shadows */
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  padding: 8px 0 !important; /* room for row shadows */
 }
 
 .payment-table.payments-table {
   border-collapse: separate !important;
-  border-spacing: 0 10px !important;
-  background: transparent;
+  border-spacing: 0 10px !important; /* gap between rows */
+  background: transparent !important;
   font-size: 14px;
 }
 
@@ -962,23 +963,31 @@
   letter-spacing: 0.04em;
 }
 
+/* Row “cards” */
 .payment-table.payments-table tbody tr {
+  background: #fff !important;
+  box-shadow: 0 8px 18px rgba(17,24,39,0.06) !important;
+  transition: transform 160ms ease, box-shadow 200ms ease !important;
+}
+.payment-table.payments-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17,24,39,0.10) !important;
   background: #fff;
-  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.06);
-  transition: transform 160ms ease, box-shadow 200ms ease;
 }
 
+/* Compact cells + soft vertical separators */
 .payment-table.payments-table tbody td {
   padding: 14px 16px !important;
   border: 0 !important;
   vertical-align: middle;
   position: relative;
+  background: transparent !important;
 }
-
 .payment-table.payments-table tbody td + td {
-  box-shadow: inset 1px 0 0 #f3f4f6; /* subtle inner divider */
+  box-shadow: inset 1px 0 0 #f3f4f6;
 }
 
+/* Rounded corners for the row-card */
 .payment-table.payments-table tbody td:first-child {
   border-top-left-radius: 12px;
   border-bottom-left-radius: 12px;
@@ -989,29 +998,73 @@
   border-bottom-right-radius: 12px;
 }
 
-.payment-table.payments-table tbody tr:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.10);
-  background: #fff;
+/* Remove blue “info” bar from ResidentForm.css on names inside payment table */
+.payment-table.payments-table .resident-info {
+  background: transparent !important;
+  border-left: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-/* Compact badges to fit the denser rows */
-.payment-table.payments-table .status-badge {
+/* Kill any stray markers/dots */
+.payment-table.payments-table tbody tr::before,
+.payment-table.payments-table tbody td:first-child::before,
+.payment-table.payments-table ::marker {
+  content: none !important;
+}
+
+/* Actions: right-aligned compact row like Residents */
+.payment-table.payments-table .actions-cell {
+  display: flex !important;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Icon buttons to match Residents’ .icon-btn */
+.pm-icon-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+  margin: 0;
+}
+.pm-icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  border-color: rgba(102,126,234,.35);
+  color: #4f46e5;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+}
+.pm-icon-btn svg { width: 16px; height: 16px; }
+
+/* Keep the colored approve/reject variant */
+.pm-icon-btn.colored.success {
+  background: #10b981; color: #fff; border-color: #10b981;
+}
+.pm-icon-btn.colored.danger {
+  background: #ef4444; color: #fff; border-color: #ef4444;
+}
+.pm-icon-btn.colored.success:hover { box-shadow: 0 10px 24px rgba(16,185,129,0.35); }
+.pm-icon-btn.colored.danger:hover { box-shadow: 0 10px 24px rgba(239,68,68,0.35); }
+
+/* Apartment chip to match Residents */
+.payment-table.payments-table .apt-chip {
+  background: rgba(59,130,246,0.10);
+  color: #2563eb;
   padding: 6px 10px;
   border-radius: 9999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: .03em;
 }
 
-/* Actions cell alignment */
-.payment-table.payments-table .actions-cell {
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Responsive density */
-@media (max-width: 1024px) {
-  .payment-table.payments-table { border-spacing: 0 8px !important; }
-  .payment-table.payments-table tbody td { padding: 12px 14px !important; }
-}
