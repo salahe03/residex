@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { expenseService } from '../services/expenseService';
 import { useToast } from '../contexts/ToastContext';
@@ -194,6 +194,7 @@ const Expenses = () => {
 
   return (
     <div className="universal-page-container">
+      <UiTooltipLayer />
       {/* Stats */}
       <KpiTiles
         items={[
@@ -278,6 +279,7 @@ const Expenses = () => {
                             onClick={() => openAllocate(exp)}
                             title="Allocate"
                             aria-label="Allocate"
+                            data-tip="Allocate funds"
                           >
                             <FiSend size={16} strokeWidth={2} aria-hidden />
                           </button>
@@ -287,6 +289,7 @@ const Expenses = () => {
                           onClick={() => handleEdit(exp)}
                           title="Edit"
                           aria-label="Edit"
+                          data-tip="Edit expense"
                         >
                           <FiEdit2 size={16} strokeWidth={2} aria-hidden />
                         </button>
@@ -295,6 +298,7 @@ const Expenses = () => {
                           onClick={() => handleDelete(exp)}
                           title="Delete"
                           aria-label="Delete"
+                          data-tip="Delete expense"
                         >
                           <FiTrash2 size={16} strokeWidth={2} aria-hidden />
                         </button>
@@ -493,6 +497,80 @@ const AllocateModal = ({ expense, overview, onCancel, onSaved }) => {
       </div>
     </div>
   );
+};
+
+// --- Tooltip Layer (copy from ResidentManagement.js) ---
+const UiTooltipLayer = () => {
+  const elRef = useRef(null);
+
+  useEffect(() => {
+    const el = document.createElement('div');
+    el.className = 'ui-tooltip';
+    const inner = document.createElement('div');
+    inner.className = 'ui-tooltip-inner';
+    el.appendChild(inner);
+    document.body.appendChild(el);
+    elRef.current = el;
+
+    let activeTarget = null;
+
+    const positionToTarget = (target) => {
+      if (!elRef.current || !target) return;
+      const r = target.getBoundingClientRect();
+      const x = r.left + r.width / 2 + window.scrollX;
+      const y = r.top + window.scrollY;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    };
+
+    const show = (target) => {
+      activeTarget = target;
+      inner.textContent = target.getAttribute('data-tip') || '';
+      positionToTarget(target);
+      requestAnimationFrame(() => el.classList.add('visible'));
+    };
+
+    const hide = () => {
+      activeTarget = null;
+      el.classList.remove('visible');
+    };
+
+    const onMouseOver = (e) => {
+      const target = e.target.closest('.icon-btn[data-tip]');
+      if (!target) return;
+      show(target);
+    };
+    const onMouseOut = (e) => {
+      if (activeTarget && !e.relatedTarget?.closest('.icon-btn[data-tip]')) {
+        hide();
+      }
+    };
+    const onMouseMove = () => {
+      if (activeTarget) positionToTarget(activeTarget);
+    };
+    const onScrollOrResize = () => {
+      if (activeTarget) positionToTarget(activeTarget);
+    };
+
+    document.addEventListener('mouseover', onMouseOver, true);
+    document.addEventListener('mouseout', onMouseOut, true);
+    document.addEventListener('mousemove', onMouseMove, true);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+
+    return () => {
+      document.removeEventListener('mouseover', onMouseOver, true);
+      document.removeEventListener('mouseout', onMouseOut, true);
+      document.removeEventListener('mousemove', onMouseMove, true);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (elRef.current && elRef.current.parentNode) {
+        elRef.current.parentNode.removeChild(elRef.current);
+      }
+    };
+  }, []);
+
+  return null;
 };
 
 export default Expenses;
