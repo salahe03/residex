@@ -245,7 +245,7 @@ const Expenses = () => {
             <AnimatePresence>
               {catDropdownOpen && (
                 <motion.ul
-                  className="framer-dropdown-list"
+                  className="dropdown-menu left"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
@@ -264,26 +264,15 @@ const Expenses = () => {
                 >
                   {categories.filter(c => c.value !== 'all').map(c => (
                     <li key={c.value}>
-                      <button
+                      <motion.button
                         type="button"
-                        className="framer-dropdown-item"
-                        style={{
-                          width: '100%',
-                          textAlign: 'left',
-                          padding: '12px 18px',
-                          background: 'none',
-                          border: 'none',
-                          fontSize: 15,
-                          color: c.value === category ? '#4f46e5' : '#333',
-                          fontWeight: c.value === category ? 700 : 500,
-                          cursor: 'pointer',
-                          borderRadius: 8,
-                          transition: 'background 0.15s'
-                        }}
+                        className={`dropdown-option${c.value === category ? ' selected' : ''}`}
                         onClick={() => { setCategory(c.value); setCatDropdownOpen(false); }}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        {c.label}
-                      </button>
+                        <span className="dropdown-option-text">{c.label}</span>
+                      </motion.button>
                     </li>
                   ))}
                 </motion.ul>
