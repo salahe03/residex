@@ -8,7 +8,8 @@ import './ResidentManagement.css';
 import './ui/KpiTiles.css';
 import SkeletonTable from './ui/SkeletonTable';
 import DropdownMenu from './ui/DropdownMenu';
-import { FiEdit, FiTrash, FiEye, FiUserCheck, FiUserX, FiChevronDown } from 'react-icons/fi';
+import { FiEdit, FiTrash, FiEye, FiUserCheck, FiUserX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Body-level tooltip for icon buttons (uses data-tip)
 const UiTooltipLayer = () => {
@@ -87,6 +88,13 @@ const UiTooltipLayer = () => {
   }, []);
 
   return null;
+};
+
+// Move ACCENTS outside the component to make it stable
+const ACCENTS = {
+  residents: '#6366f1', // indigo
+  pending:   '#f59e0b', // orange
+  users:     '#10b981', // green
 };
 
 const ResidentManagement = () => {
@@ -205,12 +213,6 @@ const ResidentManagement = () => {
   const tabsRef = useRef(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, color: '#6366f1' });
 
-  const ACCENTS = {
-    residents: '#6366f1', // indigo
-    pending:   '#f59e0b', // orange
-    users:     '#10b981', // green
-  };
-
   const updateIndicator = useCallback(() => {
     const el = tabsRef.current?.querySelector('.tab-button.active');
     const wrap = tabsRef.current;
@@ -219,7 +221,7 @@ const ResidentManagement = () => {
     const width = el.offsetWidth;
     const color = ACCENTS[activeTab] || '#6366f1';
     setIndicator({ left, width, color });
-  }, [activeTab]);
+  }, [activeTab]); // ACCENTS is now stable outside
 
   useEffect(() => {
     updateIndicator();
@@ -367,6 +369,33 @@ const ResidentManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Add dropdown states and refs (moved to top level)
+  const [residentsDropdownOpen, setResidentsDropdownOpen] = useState(false);
+  const residentsDropdownRef = useRef();
+  const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
+  const usersDropdownRef = useRef();
+
+  // Add outside click handlers (moved to top level)
+  useEffect(() => {
+    const residentsHandler = (e) => {
+      if (residentsDropdownRef.current && !residentsDropdownRef.current.contains(e.target)) {
+        setResidentsDropdownOpen(false);
+      }
+    };
+    if (residentsDropdownOpen) document.addEventListener('mousedown', residentsHandler);
+    return () => document.removeEventListener('mousedown', residentsHandler);
+  }, [residentsDropdownOpen]);
+
+  useEffect(() => {
+    const usersHandler = (e) => {
+      if (usersDropdownRef.current && !usersDropdownRef.current.contains(e.target)) {
+        setUsersDropdownOpen(false);
+      }
+    };
+    if (usersDropdownOpen) document.addEventListener('mousedown', usersHandler);
+    return () => document.removeEventListener('mousedown', usersHandler);
+  }, [usersDropdownOpen]);
+
   // Render forms if active
   if (showAddForm) {
     return (
@@ -484,18 +513,54 @@ const ResidentManagement = () => {
               className="search-input"
             />
             
-            <DropdownMenu
-              trigger={
-                <span className="filter-dropdown-trigger">
-                  {getResidentFilterText()}
-                  <FiChevronDown />
-                </span>
-              }
-              options={residentFilterOptions}
-              size="md"
-              align="left"
-              className="filter-dropdown"
-            />
+            <div className="framer-dropdown" ref={residentsDropdownRef}>
+              <button
+                type="button"
+                className="filter-dropdown-trigger"
+                onClick={() => setResidentsDropdownOpen(v => !v)}
+              >
+                {getResidentFilterText()}
+                <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20">
+                  <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                </svg>
+              </button>
+              <AnimatePresence>
+                {residentsDropdownOpen && (
+                  <motion.ul
+                    className="dropdown-menu left"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.18 }}
+                    style={{
+                      position: 'absolute',
+                      zIndex: 20,
+                      background: '#fff',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 24px rgba(102,126,234,0.10)',
+                      marginTop: 6,
+                      minWidth: 180,
+                      padding: 0,
+                      listStyle: 'none'
+                    }}
+                  >
+                    {residentFilterOptions.filter(opt => opt.id !== 'all').map(opt => (
+                      <li key={opt.id}>
+                        <motion.button
+                          type="button"
+                          className={`dropdown-option${opt.id === filterStatus ? ' selected' : ''}`}
+                          onClick={() => { setFilterStatus(opt.id); setResidentsDropdownOpen(false); }}
+                          whileHover={{ x: 2 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <span className="dropdown-option-text">{opt.text}</span>
+                        </motion.button>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           
           <button onClick={handleAddResident} className="add-resident-btn">
@@ -515,18 +580,54 @@ const ResidentManagement = () => {
               className="search-input"
             />
             
-            <DropdownMenu
-              trigger={
-                <span className="filter-dropdown-trigger">
-                  {getUserFilterText()}
-                  <FiChevronDown />
-                </span>
-              }
-              options={userFilterOptions}
-              size="md"
-              align="left"
-              className="filter-dropdown"
-            />
+            <div className="framer-dropdown" ref={usersDropdownRef}>
+              <button
+                type="button"
+                className="filter-dropdown-trigger"
+                onClick={() => setUsersDropdownOpen(v => !v)}
+              >
+                {getUserFilterText()}
+                <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20">
+                  <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                </svg>
+              </button>
+              <AnimatePresence>
+                {usersDropdownOpen && (
+                  <motion.ul
+                    className="dropdown-menu left"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.18 }}
+                    style={{
+                      position: 'absolute',
+                      zIndex: 20,
+                      background: '#fff',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 24px rgba(102,126,234,0.10)',
+                      marginTop: 6,
+                      minWidth: 180,
+                      padding: 0,
+                      listStyle: 'none'
+                    }}
+                  >
+                    {userFilterOptions.filter(opt => opt.id !== 'all').map(opt => (
+                      <li key={opt.id}>
+                        <motion.button
+                          type="button"
+                          className={`dropdown-option${opt.id === userFilterStatus ? ' selected' : ''}`}
+                          onClick={() => { setUserFilterStatus(opt.id); setUsersDropdownOpen(false); }}
+                          whileHover={{ x: 2 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <span className="dropdown-option-text">{opt.text}</span>
+                        </motion.button>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       )}
