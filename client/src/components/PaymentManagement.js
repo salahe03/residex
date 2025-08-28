@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
 import SkeletonTable from './ui/SkeletonTable';
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
-import DropdownMenu from './ui/DropdownMenu';
-import { FiChevronDown, FiInfo, FiCheck, FiX } from 'react-icons/fi';
+import { FiInfo, FiCheck, FiX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import './ui/KpiTiles.css';
 import './PaymentManagement.css';
 
@@ -77,7 +77,7 @@ const UiTooltipLayer = () => {
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
-  const { showSuccess, showWarning, showError } = useToast();
+  const { showSuccess, showWarning } = useToast(); // Removed unused showError
   
   // Shared states
   const [loading, setLoading] = useState(true);
@@ -96,6 +96,21 @@ const PaymentManagement = () => {
   const [showSubmitPayment, setShowSubmitPayment] = useState(false);
   const [showConfirmPayment, setShowConfirmPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // Add dropdown state and ref (moved to top level)
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef();
+
+  // Add outside click handler (moved to top level)
+  useEffect(() => {
+    const handler = (e) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    if (statusDropdownOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [statusDropdownOpen]);
 
   // Status filter options for dropdown
   const statusFilterOptions = [
@@ -445,18 +460,55 @@ const PaymentManagement = () => {
             className="search-input"
           />
           
-          <DropdownMenu
-            trigger={
-              <span className="filter-dropdown-trigger">
-                <FiChevronDown />
-                {getStatusFilterText()}
-              </span>
-            }
-            options={statusFilterOptions}
-            size="md"
-            align="left"
-            className="filter-dropdown"
-          />
+          {/* Replace the DropdownMenu with inline Framer Motion dropdown in the controls section */}
+          <div className="framer-dropdown" ref={statusDropdownRef}>
+            <button
+              type="button"
+              className="filter-dropdown-trigger"
+              onClick={() => setStatusDropdownOpen(v => !v)}
+            >
+              {getStatusFilterText()}
+              <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20">
+                <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <AnimatePresence>
+              {statusDropdownOpen && (
+                <motion.ul
+                  className="dropdown-menu left"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.18 }}
+                  style={{
+                    position: 'absolute',
+                    zIndex: 20,
+                    background: '#fff',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(102,126,234,0.10)',
+                    marginTop: 6,
+                    minWidth: 180,
+                    padding: 0,
+                    listStyle: 'none'
+                  }}
+                >
+                  {statusFilterOptions.filter(opt => opt.id !== 'all').map(opt => (
+                    <li key={opt.id}>
+                      <motion.button
+                        type="button"
+                        className={`dropdown-option${opt.id === filterStatus ? ' selected' : ''}`}
+                        onClick={() => { setFilterStatus(opt.id); setStatusDropdownOpen(false); }}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span className="dropdown-option-text">{opt.text}</span>
+                      </motion.button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
         
         {/* Admin Only: Create New Payment Button */}
