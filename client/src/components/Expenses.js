@@ -7,6 +7,7 @@ import SkeletonTable from './ui/SkeletonTable'; // add this import
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import './ui/KpiTiles.css';
 import { FiSend, FiEdit2, FiTrash2 } from 'react-icons/fi'; // NEW
+import { motion, AnimatePresence } from 'framer-motion';
 
 const categories = [
   { value: 'all', label: 'All Categories' },
@@ -159,6 +160,19 @@ const Expenses = () => {
     setShowAllocate(true);
   };
 
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+  const catDropdownRef = useRef();
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) {
+        setCatDropdownOpen(false);
+      }
+    };
+    if (catDropdownOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [catDropdownOpen]);
+
   if (!isAdmin) {
     return <div className="expenses-container"><div className="error-message">Unauthorized</div></div>;
   }
@@ -218,9 +232,64 @@ const Expenses = () => {
         <div className="search-filters">
           <input type="text" placeholder="🔍 Search description or vendor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input" />
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="filter-select" />
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="filter-select">
-            {categories.map(c => (<option key={c.value} value={c.value}>{c.label}</option>))}
-          </select>
+          <div className="framer-dropdown" ref={catDropdownRef}>
+            <button
+              type="button"
+              className="filter-select"
+              onClick={() => setCatDropdownOpen(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 160 }}
+            >
+              {categories.find(c => c.value === category)?.label || 'All Categories'}
+              <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
+            </button>
+            <AnimatePresence>
+              {catDropdownOpen && (
+                <motion.ul
+                  className="framer-dropdown-list"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.18 }}
+                  style={{
+                    position: 'absolute',
+                    zIndex: 20,
+                    background: '#fff',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(102,126,234,0.10)',
+                    marginTop: 6,
+                    minWidth: 180,
+                    padding: 0,
+                    listStyle: 'none'
+                  }}
+                >
+                  {categories.filter(c => c.value !== 'all').map(c => (
+                    <li key={c.value}>
+                      <button
+                        type="button"
+                        className="framer-dropdown-item"
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '12px 18px',
+                          background: 'none',
+                          border: 'none',
+                          fontSize: 15,
+                          color: c.value === category ? '#4f46e5' : '#333',
+                          fontWeight: c.value === category ? 700 : 500,
+                          cursor: 'pointer',
+                          borderRadius: 8,
+                          transition: 'background 0.15s'
+                        }}
+                        onClick={() => { setCategory(c.value); setCatDropdownOpen(false); }}
+                      >
+                        {c.label}
+                      </button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <div className="controls-right">

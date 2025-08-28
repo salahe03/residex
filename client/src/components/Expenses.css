@@ -323,6 +323,21 @@
 }
 .allocate-btn:hover { background: #f3e8ff; border-color: #7e57c2; }
 
+/* Dropdown styles */
+.framer-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.framer-dropdown-list {
+  margin: 0;
+  padding: 0;
+}
+.framer-dropdown-item:hover,
+.framer-dropdown-item:focus {
+  background: #f3f4fa;
+  color: #4f46e5;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .expenses-controls { flex-direction: column; align-items: stretch; }
