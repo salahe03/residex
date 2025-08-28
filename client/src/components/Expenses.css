@@ -96,6 +96,31 @@
   cursor: pointer;
 }
 
+/* Shimmer effect for main action buttons */
+.add-expense-btn,
+.export-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.add-expense-btn::before,
+.export-btn::before {
+  content: '';
+  position: absolute;
+  left: -60%;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+  transition: left 0.5s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+.add-expense-btn:hover::before,
+.export-btn:hover::before {
+  left: 110%;
+}
+
 /* Right-side controls */
 .controls-right {
   display: flex;
