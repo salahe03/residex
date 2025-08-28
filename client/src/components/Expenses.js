@@ -6,6 +6,7 @@ import './Expenses.css';
 import SkeletonTable from './ui/SkeletonTable'; // add this import
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import './ui/KpiTiles.css';
+import { FiSend, FiEdit2, FiTrash2 } from 'react-icons/fi'; // NEW
 
 const categories = [
   { value: 'all', label: 'All Categories' },
@@ -275,24 +276,27 @@ const Expenses = () => {
                           <button
                             className="icon-btn allocate-btn"
                             onClick={() => openAllocate(exp)}
-                            title="Allocate fund to this expense"
+                            title="Allocate"
+                            aria-label="Allocate"
                           >
-                            💸
+                            <FiSend size={16} strokeWidth={2} aria-hidden />
                           </button>
                         )}
                         <button
                           className="icon-btn edit-btn"
                           onClick={() => handleEdit(exp)}
                           title="Edit"
+                          aria-label="Edit"
                         >
-                          ✏️
+                          <FiEdit2 size={16} strokeWidth={2} aria-hidden />
                         </button>
                         <button
                           className="icon-btn danger delete-btn"
                           onClick={() => handleDelete(exp)}
                           title="Delete"
+                          aria-label="Delete"
                         >
-                          🗑️
+                          <FiTrash2 size={16} strokeWidth={2} aria-hidden />
                         </button>
                       </div>
                     </td>
