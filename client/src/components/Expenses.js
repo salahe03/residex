@@ -76,8 +76,8 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
   };
 
   return (
-    <div 
-      className={`month-picker-container ${className}`} 
+    <div
+      className={`month-picker-container ${className}`}
       ref={dropdownRef}
       style={{ position: 'relative', minWidth: 200 }}
     >
@@ -107,14 +107,14 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
           <FiCalendar size={16} style={{ color: '#667eea' }} />
           {getDisplayValue()}
         </div>
-        <svg 
-          width="16" 
-          height="16" 
-          style={{ 
+        <svg
+          width="16"
+          height="16"
+          style={{
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
-            opacity: 0.7 
-          }} 
+            opacity: 0.7
+          }}
           viewBox="0 0 20 20"
         >
           <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -143,8 +143,8 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
             }}
           >
             {/* Year selector with animation */}
-            <div style={{ 
-              padding: '16px', 
+            <div style={{
+              padding: '16px',
               borderBottom: '1px solid #f1f5f9',
               background: '#f8fafc',
               position: 'relative',
@@ -259,7 +259,7 @@ const Expenses = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
-  
+
   // Simple month state - format: "YYYY-MM"
   const currentDate = new Date();
   const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -398,12 +398,20 @@ const Expenses = () => {
     return <div className="expenses-container"><div className="error-message">Unauthorized</div></div>;
   }
 
-  if (loading && !showForm && !showAllocate) {
-    return (
-      <div className="universal-page-container page-fade">
+  { error && <div className="error-message">❌ {error}</div> }
+
+  {
+    loading ? (
+      <div className="expenses-table-container">
         <SkeletonTable rows={8} cols={7} />
       </div>
-    );
+    ) : expenses.length === 0 ? (
+      <div className="no-expenses"><h3>No expenses found</h3><p>Try adjusting your filters or add your first expense.</p></div>
+    ) : (
+      <div className="expenses-table-container">
+        {/* ...your table as before... */}
+      </div>
+    )
   }
 
   if (showForm) {
@@ -451,16 +459,16 @@ const Expenses = () => {
 
       <div className="expenses-controls">
         <div className="search-filters">
-          <input 
-            type="text" 
-            placeholder="Search description or vendor..." 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
-            className="search-input" 
+          <input
+            type="text"
+            placeholder="Search description or vendor..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
           />
-          
-          <MonthPicker 
-            value={month} 
+
+          <MonthPicker
+            value={month}
             onChange={setMonth}
           />
 
