@@ -3,10 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { expenseService } from '../services/expenseService';
 import { useToast } from '../contexts/ToastContext';
 import './Expenses.css';
-import SkeletonTable from './ui/SkeletonTable'; // add this import
+import SkeletonTable from './ui/SkeletonTable';
 import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
 import './ui/KpiTiles.css';
-import { FiSend, FiEdit2, FiTrash2 } from 'react-icons/fi'; // NEW
+import { FiSend, FiEdit2, FiTrash2, FiCalendar } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const categories = [
@@ -25,6 +25,188 @@ const categories = [
 const fmtMAD = (n) => `${Number(n || 0).toFixed(2)} MAD`;
 const fmtDate = (d) => new Date(d).toISOString().split('T')[0];
 
+// Modern Month Picker Component
+const MonthPicker = ({ value, onChange, className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const dropdownRef = useRef();
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
+  const handleMonthSelect = (monthIndex) => {
+    const yearMonth = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}`;
+    onChange(yearMonth);
+    setIsOpen(false);
+  };
+
+  const getDisplayValue = () => {
+    if (!value) return 'Select month';
+    const [year, month] = value.split('-');
+    const monthName = months[parseInt(month) - 1];
+    return `${monthName} ${year}`;
+  };
+
+  return (
+    <div 
+      className={`month-picker-container ${className}`} 
+      ref={dropdownRef}
+      style={{ position: 'relative', minWidth: 200 }}
+    >
+      <button
+        type="button"
+        className="month-picker-trigger"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          padding: '12px 16px',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          background: '#fff',
+          fontSize: '14px',
+          fontWeight: '500',
+          color: '#374151',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => e.target.style.borderColor = '#667eea'}
+        onMouseLeave={(e) => e.target.style.borderColor = '#e2e8f0'}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FiCalendar size={16} style={{ color: '#667eea' }} />
+          {getDisplayValue()}
+        </div>
+        <svg 
+          width="16" 
+          height="16" 
+          style={{ 
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+            opacity: 0.7 
+          }} 
+          viewBox="0 0 20 20"
+        >
+          <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: 'absolute',
+              zIndex: 50,
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: '4px',
+              background: '#fff',
+              borderRadius: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              border: '1px solid #e2e8f0',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Year selector */}
+            <div style={{ 
+              padding: '16px', 
+              borderBottom: '1px solid #f1f5f9',
+              background: '#f8fafc'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentYear(currentYear - 1)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    color: '#667eea'
+                  }}
+                >
+                  ←
+                </button>
+                <span style={{ fontWeight: '600', color: '#374151' }}>{currentYear}</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentYear(currentYear + 1)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    color: '#667eea'
+                  }}
+                >
+                  →
+                </button>
+              </div>
+            </div>
+
+            {/* Month grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '4px',
+              padding: '16px'
+            }}>
+              {months.map((month, index) => {
+                const isSelected = value === `${currentYear}-${String(index + 1).padStart(2, '0')}`;
+                return (
+                  <motion.button
+                    key={month}
+                    type="button"
+                    onClick={() => handleMonthSelect(index)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      padding: '12px 8px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: isSelected ? '#667eea' : 'transparent',
+                      color: isSelected ? '#fff' : '#374151',
+                      fontSize: '14px',
+                      fontWeight: isSelected ? '600' : '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {month.slice(0, 3)}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const Expenses = () => {
   const { isAdmin } = useAuth();
   const { showWarning } = useToast();
@@ -36,10 +218,11 @@ const Expenses = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
-  const [month, setMonth] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
+  
+  // Simple month state - format: "YYYY-MM"
+  const currentDate = new Date();
+  const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+  const [month, setMonth] = useState(currentMonth);
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -65,7 +248,7 @@ const Expenses = () => {
       const [list, s, ov] = await Promise.all([
         expenseService.getExpenses({ month, category, q: searchTerm }),
         expenseService.getStats(year),
-        expenseService.getFinanceOverview() // CHANGED: overall (not month-scoped)
+        expenseService.getFinanceOverview()
       ]);
       setExpenses(list.data || []);
       setStats(s.data);
@@ -97,8 +280,8 @@ const Expenses = () => {
   // CSV export including allocation columns
   const exportCsv = useCallback(() => {
     const headers = [
-      'Date','Description','Category','Vendor','Amount (MAD)',
-      'Allocated (MAD)','Remaining (MAD)','Status','Notes','Receipt URL','Created By'
+      'Date', 'Description', 'Category', 'Vendor', 'Amount (MAD)',
+      'Allocated (MAD)', 'Remaining (MAD)', 'Status', 'Notes', 'Receipt URL', 'Created By'
     ];
     const escape = (val) => {
       const v = val == null ? '' : String(val);
@@ -107,9 +290,9 @@ const Expenses = () => {
     const rows = expenses.map(e => {
       const allocated = typeof e.allocatedTotal === 'number'
         ? e.allocatedTotal
-        : (e.allocations || []).reduce((s,a)=>s + (a.amount||0), 0);
-      const remaining = Math.max(0, Number(e.amount||0) - allocated);
-      const status = allocated <= 0 ? 'unpaid' : (allocated < Number(e.amount||0) ? 'partially_paid' : 'paid');
+        : (e.allocations || []).reduce((s, a) => s + (a.amount || 0), 0);
+      const remaining = Math.max(0, Number(e.amount || 0) - allocated);
+      const status = allocated <= 0 ? 'unpaid' : (allocated < Number(e.amount || 0) ? 'partially_paid' : 'paid');
       return [
         fmtDate(e.date),
         e.description || '',
@@ -128,7 +311,7 @@ const Expenses = () => {
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const safeMonth = typeof month === 'string' ? month : new Date().toISOString().slice(0,7);
+    const safeMonth = typeof month === 'string' ? month : new Date().toISOString().slice(0, 7);
     const safeCat = category || 'all';
     a.href = url;
     a.download = `expenses_${safeMonth}_${safeCat}.csv`;
@@ -142,14 +325,11 @@ const Expenses = () => {
   const handleEdit = (exp) => { setEditing(exp); setShowForm(true); };
   const handleDelete = async (exp) => {
     if (!window.confirm(`Delete expense "${exp.description}"? This cannot be undone.`)) return;
-    try { 
-      setLoading(true); 
-      await expenseService.deleteExpense(exp._id); 
-      
-      // Add amber warning toast for deletion
+    try {
+      setLoading(true);
+      await expenseService.deleteExpense(exp._id);
       showWarning(`Expense "${exp.description}" has been deleted.`);
-      
-      await loadData(); 
+      await loadData();
     }
     catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -212,26 +392,37 @@ const Expenses = () => {
       {/* Stats */}
       <KpiTiles
         items={[
-          { label: 'This Month',     value: fmtMAD(stats?.currentMonthTotal || 0), color: 'blue',   icon: KPI_ICONS.banknote },
-          { label: 'Year To Date',   value: fmtMAD(stats?.grandTotal || 0),        color: 'indigo', icon: KPI_ICONS.chartUp },
-          { label: 'Top Category',   value: topCategory || '-',                     color: 'purple', icon: KPI_ICONS.tag },
+          { label: 'This Month', value: fmtMAD(stats?.currentMonthTotal || 0), color: 'blue', icon: KPI_ICONS.banknote },
+          { label: 'Year To Date', value: fmtMAD(stats?.grandTotal || 0), color: 'indigo', icon: KPI_ICONS.chartUp },
+          { label: 'Top Category', value: topCategory || '-', color: 'purple', icon: KPI_ICONS.tag },
         ]}
       />
 
       {/* Finance overview group */}
       <KpiTiles
         items={[
-          { label: 'Collected (All‑Time)', value: fmtMAD(overview?.paidRevenue || 0),         color: 'green',  icon: KPI_ICONS.checkCircle },
-          { label: 'Allocated (All‑Time)', value: fmtMAD(overview?.allocatedToExpenses || 0), color: 'cyan',   icon: KPI_ICONS.wallet },
-          { label: 'Fund Balance',         value: fmtMAD(overview?.fundBalance || 0),         color: 'teal',   icon: KPI_ICONS.banknote },
+          { label: 'Collected (All‑Time)', value: fmtMAD(overview?.paidRevenue || 0), color: 'green', icon: KPI_ICONS.checkCircle },
+          { label: 'Allocated (All‑Time)', value: fmtMAD(overview?.allocatedToExpenses || 0), color: 'cyan', icon: KPI_ICONS.wallet },
+          { label: 'Fund Balance', value: fmtMAD(overview?.fundBalance || 0), color: 'teal', icon: KPI_ICONS.banknote },
           { label: 'Outstanding (All‑Time)', value: fmtMAD(overview?.outstandingExpenses || 0), color: 'orange', icon: KPI_ICONS.alert },
         ]}
       />
 
       <div className="expenses-controls">
         <div className="search-filters">
-          <input type="text" placeholder="🔍 Search description or vendor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input" />
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="filter-select" />
+          <input 
+            type="text" 
+            placeholder="🔍 Search description or vendor..." 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            className="search-input" 
+          />
+          
+          <MonthPicker 
+            value={month} 
+            onChange={setMonth}
+          />
+
           <div className="framer-dropdown" ref={catDropdownRef}>
             <button
               type="button"
@@ -240,11 +431,14 @@ const Expenses = () => {
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 160 }}
             >
               {categories.find(c => c.value === category)?.label || 'All Categories'}
-              <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
+              <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20">
+                <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </svg>
             </button>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {catDropdownOpen && (
                 <motion.ul
+                  key="dropdown-menu"
                   className="dropdown-menu left"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -309,9 +503,9 @@ const Expenses = () => {
               {expenses.map(exp => {
                 const allocated = typeof exp.allocatedTotal === 'number'
                   ? exp.allocatedTotal
-                  : (exp.allocations || []).reduce((s,a)=>s + (a.amount||0), 0);
-                const remaining = Math.max(0, Number(exp.amount||0) - allocated);
-                const status = allocated <= 0 ? 'unpaid' : (allocated < Number(exp.amount||0) ? 'partially_paid' : 'paid');
+                  : (exp.allocations || []).reduce((s, a) => s + (a.amount || 0), 0);
+                const remaining = Math.max(0, Number(exp.amount || 0) - allocated);
+                const status = allocated <= 0 ? 'unpaid' : (allocated < Number(exp.amount || 0) ? 'partially_paid' : 'paid');
                 return (
                   <tr key={exp._id}>
                     <td className="date-cell">{new Date(exp.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
@@ -380,8 +574,8 @@ const Expenses = () => {
 };
 
 const ExpenseForm = ({ initial, onCancel, onSaved }) => {
-  const { showSuccess } = useToast(); // Add toast hook
-  
+  const { showSuccess } = useToast();
+
   const [form, setForm] = useState({
     amount: initial?.amount || '',
     description: initial?.description || '',
@@ -405,17 +599,15 @@ const ExpenseForm = ({ initial, onCancel, onSaved }) => {
     try {
       setLoading(true);
       setErr('');
-      
+
       if (initial?._id) {
         await expenseService.updateExpense(initial._id, form);
-        // Add green success toast for update
         showSuccess(`Expense "${form.description}" updated successfully!`);
       } else {
         await expenseService.createExpense(form);
-        // Add green success toast for creation
         showSuccess(`New expense "${form.description}" created successfully!`);
       }
-      
+
       await onSaved();
     } catch (e) {
       setErr(e.message);
@@ -486,8 +678,8 @@ const ExpenseForm = ({ initial, onCancel, onSaved }) => {
 
 const AllocateModal = ({ expense, overview, onCancel, onSaved }) => {
   const { showSuccess } = useToast();
-  const allocated = (expense.allocations || []).reduce((s,a)=>s + (a.amount||0), 0);
-  const remainingForExpense = Math.max(0, Number(expense.amount||0) - allocated);
+  const allocated = (expense.allocations || []).reduce((s, a) => s + (a.amount || 0), 0);
+  const remainingForExpense = Math.max(0, Number(expense.amount || 0) - allocated);
   const fundBalance = Number(overview?.fundBalance || 0);
   const maxAlloc = Math.min(remainingForExpense, fundBalance);
 
@@ -557,7 +749,6 @@ const AllocateModal = ({ expense, overview, onCancel, onSaved }) => {
   );
 };
 
-// --- Tooltip Layer (copy from ResidentManagement.js) ---
 const UiTooltipLayer = () => {
   const elRef = useRef(null);
 
