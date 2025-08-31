@@ -29,6 +29,7 @@ const fmtDate = (d) => new Date(d).toISOString().split('T')[0];
 const MonthPicker = ({ value, onChange, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [yearDirection, setYearDirection] = useState(0); // -1 for prev, 1 for next
   const dropdownRef = useRef();
 
   const months = [
@@ -57,6 +58,21 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
     const [year, month] = value.split('-');
     const monthName = months[parseInt(month) - 1];
     return `${monthName} ${year}`;
+  };
+
+  // Animation variants for year/month grid
+  const yearVariants = {
+    enter: (direction) => ({
+      x: direction > 0 ? 40 : -40,
+      opacity: 0,
+      position: 'absolute'
+    }),
+    center: { x: 0, opacity: 1, position: 'static' },
+    exit: (direction) => ({
+      x: direction > 0 ? -40 : 40,
+      opacity: 0,
+      position: 'absolute'
+    })
   };
 
   return (
@@ -126,16 +142,19 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
               overflow: 'hidden'
             }}
           >
-            {/* Year selector */}
+            {/* Year selector with animation */}
             <div style={{ 
               padding: '16px', 
               borderBottom: '1px solid #f1f5f9',
-              background: '#f8fafc'
+              background: '#f8fafc',
+              position: 'relative',
+              height: 40,
+              overflow: 'hidden'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 40 }}>
                 <button
                   type="button"
-                  onClick={() => setCurrentYear(currentYear - 1)}
+                  onClick={() => { setYearDirection(-1); setCurrentYear(y => y - 1); }}
                   style={{
                     padding: '8px',
                     borderRadius: '8px',
@@ -148,10 +167,23 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
                 >
                   ←
                 </button>
-                <span style={{ fontWeight: '600', color: '#374151' }}>{currentYear}</span>
+                <AnimatePresence custom={yearDirection} initial={false} mode="wait">
+                  <motion.span
+                    key={currentYear}
+                    custom={yearDirection}
+                    variants={yearVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                    style={{ fontWeight: '600', color: '#374151', minWidth: 60, textAlign: 'center', display: 'inline-block' }}
+                  >
+                    {currentYear}
+                  </motion.span>
+                </AnimatePresence>
                 <button
                   type="button"
-                  onClick={() => setCurrentYear(currentYear + 1)}
+                  onClick={() => { setYearDirection(1); setCurrentYear(y => y + 1); }}
                   style={{
                     padding: '8px',
                     borderRadius: '8px',
@@ -167,39 +199,48 @@ const MonthPicker = ({ value, onChange, className = '' }) => {
               </div>
             </div>
 
-            {/* Month grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '4px',
-              padding: '16px'
-            }}>
-              {months.map((month, index) => {
-                const isSelected = value === `${currentYear}-${String(index + 1).padStart(2, '0')}`;
-                return (
-                  <motion.button
-                    key={month}
-                    type="button"
-                    onClick={() => handleMonthSelect(index)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      padding: '12px 8px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      background: isSelected ? '#667eea' : 'transparent',
-                      color: isSelected ? '#fff' : '#374151',
-                      fontSize: '14px',
-                      fontWeight: isSelected ? '600' : '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {month.slice(0, 3)}
-                  </motion.button>
-                );
-              })}
-            </div>
+            {/* Month grid with fade/slide animation */}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={currentYear}
+                initial={{ opacity: 0, x: yearDirection > 0 ? 40 : -40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: yearDirection > 0 ? -40 : 40 }}
+                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '4px',
+                  padding: '16px'
+                }}
+              >
+                {months.map((month, index) => {
+                  const isSelected = value === `${currentYear}-${String(index + 1).padStart(2, '0')}`;
+                  return (
+                    <motion.button
+                      key={month}
+                      type="button"
+                      onClick={() => handleMonthSelect(index)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      style={{
+                        padding: '12px 8px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: isSelected ? '#667eea' : 'transparent',
+                        color: isSelected ? '#fff' : '#374151',
+                        fontSize: '14px',
+                        fontWeight: isSelected ? '600' : '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {month.slice(0, 3)}
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -412,7 +453,7 @@ const Expenses = () => {
         <div className="search-filters">
           <input 
             type="text" 
-            placeholder="🔍 Search description or vendor..." 
+            placeholder="Search description or vendor..." 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
             className="search-input" 
