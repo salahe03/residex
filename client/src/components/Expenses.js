@@ -441,7 +441,8 @@ const Expenses = () => {
       {/* Stats */}
       <KpiTiles
         items={[
-          { label: 'This Month', value: fmtMAD(stats?.currentMonthTotal || 0), color: 'blue', icon: KPI_ICONS.banknote },
+           // Use the computed total of the currently loaded month
+          { label: 'This Month', value: fmtMAD(shownTotal), color: 'blue', icon: KPI_ICONS.banknote },
           { label: 'Year To Date', value: fmtMAD(stats?.grandTotal || 0), color: 'indigo', icon: KPI_ICONS.chartUp },
           { label: 'Top Category', value: topCategory || '-', color: 'purple', icon: KPI_ICONS.tag },
         ]}
