@@ -214,6 +214,33 @@
   background: transparent;
 }
 
+/* --- Single Scroll Mode: add near top or after existing layout rules --- */
+html, body {
+  height: auto;                 /* allow natural document height */
+  overflow-y: auto;             /* browser scrollbar only */
+  overscroll-behavior: contain; /* prevent bounce nesting on some browsers */
+}
+
+/* Content shell should size to content, not lock to viewport height */
+.content-shell {
+  height: auto !important;
+  min-height: 100vh;            /* still fill initial viewport */
+}
+
+/* Remove the inner scrolling container that created the 2nd scrollbar */
+.content-shell-body,
+.page-content {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Ensure universal wrappers don’t reintroduce scrollbars */
+.content-shell-body > .universal-page-container,
+.content-shell-body > .payment-management-container,
+.content-shell-body > .expenses-container {
+  overflow: visible !important;
+}
+
 /* === CONTENT SHELL === */
 .content-shell {
   background: #ffffff;
