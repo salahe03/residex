@@ -5,6 +5,7 @@ import PaymentManagement from './PaymentManagement';
 import Expenses from './Expenses';
 import TenantDashboard from './TenantDashboard';
 import './Dashboard.css';
+import { FiHome, FiUsers, FiDollarSign, FiBarChart2, FiFileText } from 'react-icons/fi';
 
 const Dashboard = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -95,6 +96,15 @@ const Dashboard = () => {
     );
   };
 
+  // NEW: unified nav config (replaces emoji buttons + "Main" label)
+  const navItems = [
+    { key: 'dashboard', label: 'Overview', icon: <FiHome /> },
+    ...(isAdmin ? [{ key: 'resident-management', label: 'Residents', icon: <FiUsers /> }] : []),
+    { key: 'payments', label: isAdmin ? 'Payments' : 'My Payments', icon: <FiDollarSign /> },
+    ...(isAdmin ? [{ key: 'expenses', label: 'Expenses', icon: <FiBarChart2 /> }] : []),
+    { key: 'documents', label: 'Documents', icon: <FiFileText /> }
+  ];
+
   return (
     <div className="dashboard-container">
       <div className="merged-layout">
@@ -104,68 +114,34 @@ const Dashboard = () => {
             <button 
               className="sidebar-close"
               onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
             >
               ×
             </button>
           </div>
 
-          <nav className="sidebar-nav">
-            <ul className="nav-group">
-              <li>
-                <button 
-                  className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('dashboard')}
-                >
-                  <span className="nav-icon">🏠</span>
-                  <span className="nav-text">Overview</span>
-                </button>
-              </li>
-
-              {isAdmin && (
-                <li>
-                  <button 
-                    className={`nav-item ${currentView === 'resident-management' ? 'active' : ''}`}
-                    onClick={() => handleNavClick('resident-management')}
-                  >
-                    <span className="nav-icon">👥</span>
-                    <span className="nav-text">Residents</span>
-                  </button>
-                </li>
-              )}
-
-              <li>
-                <button 
-                  className={`nav-item ${currentView === 'payments' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('payments')}
-                >
-                  <span className="nav-icon">💰</span>
-                  <span className="nav-text">{isAdmin ? 'Payments' : 'My Payments'}</span>
-                </button>
-              </li>
-
-              {isAdmin && (
-                <li>
-                  <button
-                    className={`nav-item ${currentView === 'expenses' ? 'active' : ''}`}
-                    onClick={() => handleNavClick('expenses')}
-                  >
-                    <span className="nav-icon">📊</span>
-                    <span className="nav-text">Expenses</span>
-                  </button>
-                </li>
-              )}
-
-              <li>
-                <button 
-                  className={`nav-item ${currentView === 'documents' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('documents')}
-                >
-                  <span className="nav-icon">📄</span>
-                  <span className="nav-text">Documents</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
+            {/* NEW SIDEBAR NAV */}
+            <nav className="sidebar-nav">
+              <ul className="nav-group">
+                {navItems.map(item => {
+                  const active = currentView === item.key;
+                  return (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        className={`nav-item${active ? ' active' : ''}`}
+                        onClick={() => handleNavClick(item.key)}
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        <span className="nav-icon">{item.icon}</span>
+                        <span className="nav-label">{item.label}</span>
+                        <span className="nav-active-glow" aria-hidden="true" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
 
           <div className="sidebar-footer">
             <div className="user-profile">
@@ -184,7 +160,6 @@ const Dashboard = () => {
         </aside>
 
         <div className="main-area">
-          {/* The header is now removed entirely */}
           <main className="page-content page-fade">
             {renderContent()}
           </main>
