@@ -144,19 +144,19 @@ const Dashboard = () => {
             </nav>
 
           <div className="sidebar-footer">
-            <div className="user-profile">
-              <div className="user-avatar">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-info">
-                <p className="user-name">{user.name}</p>
-                <p className="user-role">{user.role}</p>
-              </div>
-            </div>
-            <button onClick={handleLogout} className="logout-btn">
-              Logout
-            </button>
-          </div>
+  <div className="sidebar-user">
+    <div className="user-avatar">
+      {(user?.name && user.name[0]) ? user.name[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U')}
+    </div>
+    <div className="user-meta">
+      <div className="user-name">{user?.name || 'User'}</div>
+      <div className="user-role">{isAdmin ? 'Admin' : 'Tenant'}</div>
+    </div>
+  </div>
+  <button className="logout-btn" onClick={handleLogout}>
+    Logout
+  </button>
+</div>
         </aside>
 
         <div className="main-area">
