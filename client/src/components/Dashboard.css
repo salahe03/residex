@@ -26,7 +26,6 @@
   z-index: 1000;
 }
 
-/* Sidebar header (no pseudo elements) */
 .sidebar-header {
   padding: 26px 22px 10px; /* reduced bottom padding from 22px to 18px */
   background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
