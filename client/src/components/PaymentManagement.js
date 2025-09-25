@@ -1,19 +1,89 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import CreatePayment from './CreatePayment';
-import SkeletonTable from './ui/SkeletonTable'; // add this import
+import SkeletonTable from './ui/SkeletonTable';
+import KpiTiles, { KPI_ICONS } from './ui/KpiTiles';
+import { FiInfo, FiCheck, FiX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import './ui/KpiTiles.css';
 import './PaymentManagement.css';
+
+// Body-level tooltip (anchored to top-center of the target)
+const UiTooltipLayer = () => {
+  const elRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const el = document.createElement('div');
+    el.className = 'ui-tooltip';
+    const inner = document.createElement('div');
+    inner.className = 'ui-tooltip-inner';
+    el.appendChild(inner);
+    document.body.appendChild(el);
+    elRef.current = el;
+
+    let activeTarget = null;
+
+    const positionToTarget = (target) => {
+      if (!elRef.current || !target) return;
+      const r = target.getBoundingClientRect();
+      const x = r.left + r.width / 2 + window.scrollX;
+      const y = r.top + window.scrollY;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    };
+
+    const show = (target) => {
+      activeTarget = target;
+      inner.textContent = target.getAttribute('data-tip') || '';
+      positionToTarget(target);
+      requestAnimationFrame(() => el.classList.add('visible'));
+    };
+
+    const hide = () => {
+      activeTarget = null;
+      el.classList.remove('visible');
+    };
+
+    const onMouseOver = (e) => {
+      const target = e.target.closest('.pm-icon-btn[data-tip]');
+      if (!target) return;
+      show(target);
+    };
+    const onMouseOut = (e) => {
+      if (activeTarget && !e.relatedTarget?.closest('.pm-icon-btn[data-tip]')) hide();
+    };
+    const onScrollOrResize = () => {
+      if (activeTarget) positionToTarget(activeTarget);
+    };
+
+    document.addEventListener('mouseover', onMouseOver, true);
+    document.addEventListener('mouseout', onMouseOut, true);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+
+    return () => {
+      document.removeEventListener('mouseover', onMouseOver, true);
+      document.removeEventListener('mouseout', onMouseOut, true);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (elRef.current?.parentNode) elRef.current.parentNode.removeChild(elRef.current);
+    };
+  }, []);
+
+  return null;
+};
 
 const PaymentManagement = () => {
   const { user, isAdmin } = useAuth();
-  const { showSuccess, showWarning, showError } = useToast();
+  const { showSuccess, showWarning } = useToast(); // Removed unused showError
   
   // Shared states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState(null); // KEEP this - stats are still used
+  const [stats, setStats] = useState(null); // Admin stats
+  const [tenantStats, setTenantStats] = useState(null); // NEW: Tenant stats
   
   // Payment states
   const [payments, setPayments] = useState([]);
@@ -26,6 +96,87 @@ const PaymentManagement = () => {
   const [showSubmitPayment, setShowSubmitPayment] = useState(false);
   const [showConfirmPayment, setShowConfirmPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // Add dropdown state and ref (moved to top level)
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef();
+
+  // Add outside click handler (moved to top level)
+  useEffect(() => {
+    const handler = (e) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    if (statusDropdownOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [statusDropdownOpen]);
+
+  // Status filter options for dropdown
+  const statusFilterOptions = [
+    { id: 'all', text: 'All Status', onClick: () => setFilterStatus('all') },
+    { id: 'pending', text: 'Pending', onClick: () => setFilterStatus('pending') },
+    { id: 'submitted', text: 'Submitted', onClick: () => setFilterStatus('submitted') },
+    { id: 'paid', text: 'Paid', onClick: () => setFilterStatus('paid') },
+    { id: 'overdue', text: 'Overdue', onClick: () => setFilterStatus('overdue') },
+    { id: 'rejected', text: 'Rejected', onClick: () => setFilterStatus('rejected') }
+  ];
+
+  // Get current filter display text
+  const getStatusFilterText = () => {
+    switch (filterStatus) {
+      case 'pending': return 'Pending';
+      case 'submitted': return 'Submitted';
+      case 'paid': return 'Paid';
+      case 'overdue': return 'Overdue';
+      case 'rejected': return 'Rejected';
+      default: return 'All Status';
+    }
+  };
+
+  // Helper function to calculate tenant stats from payments
+  const calculateTenantStats = useCallback((paymentList) => {
+    if (!paymentList || paymentList.length === 0) {
+      return {
+        totalAssigned: 0,
+        totalPaid: 0,
+        totalOutstanding: 0,
+        totalOverdue: 0,
+        completionRate: 0,
+        nextDueAmount: 0,
+        nextDueDate: null
+      };
+    }
+
+    const now = new Date();
+    const totalAssigned = paymentList.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalPaid = paymentList.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalOutstanding = paymentList.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalOverdue = paymentList.filter(p => {
+      return p.status === 'pending' && new Date(p.dueDate) < now;
+    }).reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    const completionRate = totalAssigned > 0 ? Math.round((totalPaid / totalAssigned) * 100) : 0;
+
+    // Find next due payment
+    const upcomingPayments = paymentList
+      .filter(p => p.status === 'pending' && new Date(p.dueDate) >= now)
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    
+    const nextDue = upcomingPayments[0];
+    const nextDueAmount = nextDue ? nextDue.amount : 0;
+    const nextDueDate = nextDue ? nextDue.dueDate : null;
+
+    return {
+      totalAssigned,
+      totalPaid,
+      totalOutstanding,
+      totalOverdue,
+      completionRate,
+      nextDueAmount,
+      nextDueDate
+    };
+  }, []);
 
   // Load data based on user role
   const loadData = useCallback(async () => {
@@ -43,7 +194,12 @@ const PaymentManagement = () => {
       } else {
         // Regular users see only their own payments
         const userPaymentsResponse = await paymentService.getUserPayments(user.id);
-        setPayments(userPaymentsResponse.data || []);
+        const userPayments = userPaymentsResponse.data || [];
+        setPayments(userPayments);
+        
+        // Calculate tenant stats from their payments
+        const calculatedStats = calculateTenantStats(userPayments);
+        setTenantStats(calculatedStats);
       }
     } catch (error) {
       console.error('Error loading payment data:', error);
@@ -51,80 +207,76 @@ const PaymentManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, user?.id]);
+  }, [user?.id, isAdmin, calculateTenantStats]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (user?.id) {
+      loadData();
+    }
+  }, [loadData, user?.id]);
+
+  // Helper function to format currency
+  const formatCurrency = (amount) => {
+    return `${Number(amount || 0).toLocaleString()} MAD`;
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Helper function to get status badge class
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'paid': return 'status-paid';
+      case 'submitted': return 'status-submitted';
+      case 'pending': return 'status-pending';
+      case 'overdue': return 'status-overdue';
+      case 'rejected': return 'status-overdue';
+      default: return 'status-pending';
+    }
+  };
 
   // Handle tenant payment submission
-  const handleSubmitPayment = async (payment) => {
+  const handleSubmitPayment = (payment) => {
     setSelectedPayment(payment);
     setShowSubmitPayment(true);
   };
 
-  const handleConfirmSubmitPayment = async (paymentDetails) => {
+  const handleConfirmPayment = (payment) => {
+    setSelectedPayment(payment);
+    setShowConfirmPayment(true);
+  };
+
+  const handleConfirmSubmitPayment = async (paymentData) => {
     try {
       setProcessingPayment(selectedPayment._id);
-      await paymentService.submitPayment(selectedPayment._id, paymentDetails);
-      
+      await paymentService.submitPayment(selectedPayment._id, paymentData);
       setShowSubmitPayment(false);
       setSelectedPayment(null);
-      setError('');
       loadData();
-       
-      // Fix the variable reference - NO unnecessary variables
-      showSuccess(
-        `Payment proof ${selectedPayment.status === 'rejected' ? 'resubmitted' : 'submitted'} successfully! Your ${selectedPayment.description} payment is now awaiting admin confirmation.`
-      );
-      
-      console.log('Payment submitted successfully');
+      showSuccess('Payment submitted successfully! It will be reviewed and confirmed by an admin.');
     } catch (error) {
       console.error('Error submitting payment:', error);
-      
-      // Clear page error and show toast instead
-      setError('');
-      
-      // Handle different types of errors with appropriate toasts
-      if (error.message.includes('already been submitted or confirmed')) {
-        showError('This payment has already been processed and cannot be resubmitted.');
-      } else if (error.message.includes('Payment method and payment date are required')) {
-        showError('Please fill in all required fields.');
-      } else if (error.message.includes('Payment not found')) {
-        showError('Payment not found. Please refresh the page and try again.');
-      } else if (error.message.includes('only submit payment for your own charges')) {
-        showError('You can only submit payments for your own charges.');
-      } else {
-        showError('Failed to submit payment. Please try again.');
-      }
-      
-      // Close modal on error
-      setShowSubmitPayment(false);
-      setSelectedPayment(null);
+      setError(error.message);
     } finally {
       setProcessingPayment(null);
     }
   };
 
-  // Handle admin payment confirmation
-  const handleConfirmPayment = async (payment) => {
-    setSelectedPayment(payment);
-    setShowConfirmPayment(true);
-  };
-
-  const handleConfirmConfirmPayment = async (adminNotes) => {
+  const handleConfirmConfirmPayment = async (confirmationData) => {
     try {
       setProcessingPayment(selectedPayment._id);
-      await paymentService.confirmPayment(selectedPayment._id, adminNotes);
-      
+      await paymentService.confirmPayment(selectedPayment._id, confirmationData);
       setShowConfirmPayment(false);
       setSelectedPayment(null);
-      loadData(); // Refresh data
-      
-      // Add success toast for admin payment confirmation
-      showSuccess(`Payment confirmed! ${selectedPayment.amount} MAD collected from ${selectedPayment.resident?.name} for ${selectedPayment.description}.`);
-      
-      console.log('Payment confirmed successfully');
+      loadData();
+      showSuccess(`Payment confirmed successfully! ${selectedPayment.resident?.name}'s payment has been processed.`);
     } catch (error) {
       console.error('Error confirming payment:', error);
       setError(error.message);
@@ -133,18 +285,15 @@ const PaymentManagement = () => {
     }
   };
 
-  // Handle admin payment rejection
   const handleRejectPayment = async (payment) => {
-    if (window.confirm('Are you sure you want to reject this payment submission?')) {
+    if (window.confirm(`Reject ${payment.resident?.name}'s payment for ${payment.description}?`)) {
       try {
         setProcessingPayment(payment._id);
-        await paymentService.rejectPayment(payment._id, 'Payment submission rejected by admin');
-        
-        loadData(); // Refresh data
-        
-        // Updated to use warning toast (amber with "!" icon) for payment rejection
+        await paymentService.rejectPayment(payment._id, {
+          adminNotes: 'Payment rejected by admin'
+        });
+        loadData();
         showWarning(`Payment rejected! ${payment.resident?.name}'s payment for ${payment.description} has been declined and can be resubmitted.`);
-        
         console.log('Payment rejected successfully');
       } catch (error) {
         console.error('Error rejecting payment:', error);
@@ -155,12 +304,9 @@ const PaymentManagement = () => {
     }
   };
 
-  // Handle creating bulk payments (admin only)
   const handleCreateBulkSuccess = () => {
     setShowCreateBulk(false);
-    loadData(); // Refresh data
-    
-    // Add success toast for payment creation
+    loadData();
     showSuccess('New payments created successfully! Residents have been notified of their payment obligations.');
   };
 
@@ -170,47 +316,20 @@ const PaymentManagement = () => {
                           payment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           payment.period?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'all' || payment.status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || 
+                          (filterStatus === 'pending' && payment.status === 'pending') ||
+                          (filterStatus === 'submitted' && payment.status === 'submitted') ||
+                          (filterStatus === 'paid' && payment.status === 'paid') ||
+                          (filterStatus === 'overdue' && payment.status === 'pending' && new Date(payment.dueDate) < new Date()) ||
+                          (filterStatus === 'rejected' && payment.status === 'rejected');
     
     return matchesSearch && matchesStatus;
   });
 
-  // Get status badge color
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'paid':
-        return 'status-paid';
-      case 'submitted':
-        return 'status-submitted';
-      case 'pending':
-        return 'status-pending';
-      case 'overdue':
-        return 'status-overdue';
-      case 'rejected':
-        return 'status-rejected';
-      default:
-        return 'status-pending';
-    }
-  };
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `${amount} MAD`;
-  };
-
-  // Format date
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   // Loading state
   if (loading && !showCreateBulk && !showSubmitPayment && !showConfirmPayment) {
     return (
-      <div className="payment-management-container page-fade">
+      <div className="universal-page-container page-fade">
         <SkeletonTable rows={8} cols={6} />
       </div>
     );
@@ -226,28 +345,108 @@ const PaymentManagement = () => {
     );
   }
 
+  // Payment info tooltip content
+  const getPaymentInfoTip = (p) => {
+    const info = [];
+    if (p.paymentSubmission?.submittedAt) info.push(`Submitted: ${formatDate(p.paymentSubmission.submittedAt)}`);
+    if (p.confirmation?.confirmedAt) info.push(`Confirmed: ${formatDate(p.confirmation.confirmedAt)}`);
+    if (p.status === 'rejected' && p.confirmation?.adminNotes) info.push(`Reason: ${p.confirmation.adminNotes}`);
+    return info.join('\n') || 'No additional details';
+  };
+
   return (
     <div className="payment-management-container">
-      {/* KEEP the stats but remove the title card */}
+      <UiTooltipLayer />
+      {/* ADMIN STATS - Keep existing */}
       {stats && isAdmin && (
-        <div className="payment-stats">
-          <div className="stat-card">
-            <span className="stat-number">{stats.total.count}</span>
-            <span className="stat-label">Total Payments</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{formatCurrency(stats.total.paidAmount)}</span>
-            <span className="stat-label">Amount Collected</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{formatCurrency(stats.total.totalAmount - stats.total.paidAmount)}</span>
-            <span className="stat-label">Outstanding</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{formatCurrency(Math.round(stats.averagePayment))}</span>
-            <span className="stat-label">Avg. Payment</span>
-          </div>
-        </div>
+        <KpiTiles
+          items={[
+            {
+              label: 'Total Payments',
+              value: (stats.total?.count ?? 0).toLocaleString(),
+              color: 'indigo',
+              icon: KPI_ICONS.receipt
+            },
+            {
+              label: 'Amount Collected',
+              value: formatCurrency(stats.total?.paidAmount ?? 0),
+              color: 'green',
+              icon: KPI_ICONS.checkCircle
+            },
+            {
+              label: 'Outstanding',
+              value: formatCurrency(
+                Math.max(0, (stats.total?.totalAmount ?? 0) - (stats.total?.paidAmount ?? 0))
+              ),
+              color: 'orange',
+              icon: KPI_ICONS.alert
+            },
+            {
+              label: 'Avg. Payment',
+              value: formatCurrency(Math.round(stats.averagePayment ?? 0)),
+              color: 'purple',
+              icon: KPI_ICONS.chartUp
+            }
+          ]}
+        />
+      )}
+
+      {/* NEW: TENANT STATS */}
+      {tenantStats && !isAdmin && (
+        <KpiTiles
+          items={[
+            {
+              label: 'Total Assigned',
+              value: formatCurrency(tenantStats.totalAssigned),
+              color: 'indigo',
+              icon: KPI_ICONS.receipt
+            },
+            {
+              label: 'Amount Paid',
+              value: formatCurrency(tenantStats.totalPaid),
+              color: 'green',
+              icon: KPI_ICONS.checkCircle
+            },
+            {
+              label: 'Outstanding',
+              value: formatCurrency(tenantStats.totalOutstanding),
+              color: 'orange',
+              icon: KPI_ICONS.alert
+            },
+            {
+              label: 'Completion Rate',
+              value: `${tenantStats.completionRate}%`,
+              color: 'purple',
+              icon: KPI_ICONS.chartUp
+            }
+          ]}
+        />
+      )}
+
+      {/* Second row of tenant stats */}
+      {tenantStats && !isAdmin && (tenantStats.totalOverdue > 0 || tenantStats.nextDueAmount > 0) && (
+        <KpiTiles
+          items={[
+            ...(tenantStats.totalOverdue > 0 ? [{
+              label: 'Overdue Amount',
+              value: formatCurrency(tenantStats.totalOverdue),
+              color: 'red',
+              icon: KPI_ICONS.alert
+            }] : []),
+            ...(tenantStats.nextDueAmount > 0 ? [{
+              label: 'Next Due Amount',
+              value: formatCurrency(tenantStats.nextDueAmount),
+              color: 'cyan',
+              icon: KPI_ICONS.calendar
+            }] : []),
+            ...(tenantStats.nextDueDate ? [{
+              label: 'Next Due Date',
+              value: formatDate(tenantStats.nextDueDate),
+              color: 'blue',
+              icon: KPI_ICONS.calendar
+            }] : [])
+          ].filter(Boolean)}
+        />
       )}
 
       {/* Controls */}
@@ -255,24 +454,61 @@ const PaymentManagement = () => {
         <div className="search-filters">
           <input
             type="text"
-            placeholder="🔍 Search payments..."
+            placeholder="Search payments..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
           
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="submitted">Submitted</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          {/* Replace the DropdownMenu with inline Framer Motion dropdown in the controls section */}
+          <div className="framer-dropdown" ref={statusDropdownRef}>
+            <button
+              type="button"
+              className="filter-dropdown-trigger"
+              onClick={() => setStatusDropdownOpen(v => !v)}
+            >
+              {getStatusFilterText()}
+              <svg width="18" height="18" style={{ marginLeft: 8, opacity: 0.7 }} viewBox="0 0 20 20">
+                <path d="M6 8l4 4 4-4" stroke="#667eea" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <AnimatePresence>
+              {statusDropdownOpen && (
+                <motion.ul
+                  className="dropdown-menu left"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.18 }}
+                  style={{
+                    position: 'absolute',
+                    zIndex: 20,
+                    background: '#fff',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(102,126,234,0.10)',
+                    marginTop: 6,
+                    minWidth: 180,
+                    padding: 0,
+                    listStyle: 'none'
+                  }}
+                >
+                  {statusFilterOptions.filter(opt => opt.id !== 'all').map(opt => (
+                    <li key={opt.id}>
+                      <motion.button
+                        type="button"
+                        className={`dropdown-option${opt.id === filterStatus ? ' selected' : ''}`}
+                        onClick={() => { setFilterStatus(opt.id); setStatusDropdownOpen(false); }}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span className="dropdown-option-text">{opt.text}</span>
+                      </motion.button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
         
         {/* Admin Only: Create New Payment Button */}
@@ -304,12 +540,12 @@ const PaymentManagement = () => {
           </p>
         </div>
       ) : (
-        <div className="payment-table-container">
-          <table className="payment-table">
+        <div className="payment-table-container payments-table-wrap">
+          <table className="payment-table payments-table">
             <thead>
               <tr>
-                {/* Admin sees resident column, users don't */}
                 {isAdmin && <th>Resident</th>}
+                {isAdmin && <th>Apt</th>}
                 <th>Description</th>
                 <th>Period</th>
                 <th>Amount</th>
@@ -321,13 +557,16 @@ const PaymentManagement = () => {
             <tbody>
               {filteredPayments.map((payment) => (
                 <tr key={payment._id}>
-                  {/* Admin sees resident info */}
                   {isAdmin && (
                     <td className="resident-cell">
                       <div className="resident-info">
                         <span className="resident-name">{payment.resident?.name}</span>
-                        <span className="resident-apartment">{payment.resident?.apartmentNumber}</span>
                       </div>
+                    </td>
+                  )}
+                  {isAdmin && (
+                    <td className="apt-cell">
+                      <span className="apt-chip">{payment.resident?.apartmentNumber || '-'}</span>
                     </td>
                   )}
                   <td className="description-cell">{payment.description}</td>
@@ -336,51 +575,53 @@ const PaymentManagement = () => {
                   <td className="date-cell">{formatDate(payment.dueDate)}</td>
                   <td className="status-cell">
                     <span className={`status-badge ${getStatusBadge(payment.status)}`}>
-                      {payment.status === 'submitted' ? 'Awaiting Confirmation' : 
+                      {payment.status === 'submitted' ? 'Awaiting Confirmation' :
                        payment.status === 'rejected' ? 'Rejected' :
                        payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                     </span>
-                    {payment.confirmation?.confirmedAt && (
-                      <div className="payment-date">Confirmed: {formatDate(payment.confirmation.confirmedAt)}</div>
-                    )}
-                    {payment.paymentSubmission?.submittedAt && (
-                      <div className="payment-date">Submitted: {formatDate(payment.paymentSubmission.submittedAt)}</div>
-                    )}
-                    {payment.status === 'rejected' && payment.confirmation?.adminNotes && (
-                      <div className="rejection-reason">Reason: {payment.confirmation.adminNotes}</div>
-                    )}
                   </td>
                   <td className="actions-cell">
-                    {/* Tenant Actions */}
-                    {!isAdmin && (payment.status === 'pending' || payment.status === 'overdue' || payment.status === 'rejected') && (
+                    <button
+                      type="button"
+                      className="pm-icon-btn"
+                      data-tip={getPaymentInfoTip(payment)}
+                      aria-label="Payment info"
+                    >
+                      <FiInfo />
+                    </button>
+
+                    {/* Tenant action stays the same */}
+                    {!isAdmin && payment.status === 'pending' && (
                       <button
                         onClick={() => handleSubmitPayment(payment)}
                         className="pay-btn"
                         disabled={processingPayment === payment._id}
-                        title="Submit payment proof"
+                        title="Submit payment"
                       >
-                        {processingPayment === payment._id ? '⏳' : payment.status === 'rejected' ? '🔄 Resubmit' : '💳 Pay'}
+                        {processingPayment === payment._id ? '⏳' : '💳 Pay'}
                       </button>
                     )}
-                    
-                    {/* Admin Actions */}
+
+                    {/* Admin icon actions: permanently colored with glow on hover */}
                     {isAdmin && payment.status === 'submitted' && (
                       <div className="admin-actions">
                         <button
                           onClick={() => handleConfirmPayment(payment)}
-                          className="confirm-btn"
+                          className="pm-icon-btn colored success"
                           disabled={processingPayment === payment._id}
+                          aria-label="Confirm payment"
                           title="Confirm payment"
                         >
-                          {processingPayment === payment._id ? '⏳' : '✅'}
+                          <FiCheck />
                         </button>
                         <button
                           onClick={() => handleRejectPayment(payment)}
-                          className="reject-btn"
+                          className="pm-icon-btn colored danger"
                           disabled={processingPayment === payment._id}
+                          aria-label="Reject payment"
                           title="Reject payment"
                         >
-                          ❌
+                          <FiX />
                         </button>
                       </div>
                     )}

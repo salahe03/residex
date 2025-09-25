@@ -1,8 +1,9 @@
 /* Container */
 .expenses-container {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding: 20px;
+  background: transparent;  /* align with unified content shell */
+  padding: 0;               /* remove extra outer padding */
+  margin: 0;                /* flush to shell edges */
 }
 
 /* Header + stats */
@@ -95,6 +96,31 @@
   cursor: pointer;
 }
 
+/* Shimmer effect for main action buttons */
+.add-expense-btn,
+.export-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.add-expense-btn::before,
+.export-btn::before {
+  content: '';
+  position: absolute;
+  left: -60%;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+  transition: left 0.5s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+.add-expense-btn:hover::before,
+.export-btn:hover::before {
+  left: 110%;
+}
+
 /* Right-side controls */
 .controls-right {
   display: flex;
@@ -119,78 +145,124 @@
 
 /* Table */
 .expenses-table-container {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  padding: 8px 0 !important; /* breathing room for row shadows */
 }
 
 .expenses-table {
-  width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate !important;
+  border-spacing: 0 10px !important; /* gap between rows */
+  background: transparent !important;
   font-size: 14px;
+  width: 100% !important;
+  table-layout: auto;
 }
 
-.expenses-table th {
-  background: #f8f9fa;
-  color: #333;
+.expenses-table thead th {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 8px 12px !important;
+  color: #6b7280;
   font-weight: 600;
-  padding: 16px 12px;
-  text-align: left;
-  border-bottom: 2px solid #e1e5e9;
-}
-
-.expenses-table td {
-  padding: 16px 12px;
-  border-bottom: 1px solid #f1f3f4;
-  vertical-align: middle;
-}
-
-.expenses-table tr:hover {
-  background: #f8f9fa;
-}
-
-/* Badges and cells */
-.category-badge {
-  background: #eef2ff;
-  color: #3f51b5;
-  padding: 4px 8px;
-  border-radius: 12px;
   font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.amount-cell {
-  font-weight: 600;
-  color: #2e7d32;
+/* Row “cards” */
+.expenses-table tbody tr {
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(17,24,39,0.06);
+  transition: transform 160ms ease, box-shadow 200ms ease;
 }
 
-.actions-cell {
+/* Compact cells + soft vertical dividers */
+.expenses-table tbody td {
+  padding: 14px 16px !important;
+  border: 0 !important;
+  vertical-align: middle;
+  position: relative;
+  background: transparent !important;
+}
+.expenses-table tbody td + td {
+  box-shadow: inset 1px 0 0 #f3f4f6;
+}
+
+/* Rounded corners for the row-card */
+.expenses-table tbody td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  box-shadow: none !important;
+}
+.expenses-table tbody td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Hover lift (exactly like Residents) */
+.expenses-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17,24,39,0.10);
+  background: #fff;
+}
+
+/* Actions column compact + right aligned */
+.expenses-table .actions-cell {
+  text-align: right !important;
   white-space: nowrap;
-  text-align: center;
+}
+.expenses-table .icon-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px !important; /* same gap as Residents */
+}
+.expenses-table .icon-actions .icon-btn {
+  margin: 0 !important;
+}
+.expenses-table .icon-actions .allocate-btn {
+  padding: 0 !important;
+  margin: 0 !important;
+  border-color: #eef0f4 !important;
 }
 
-.edit-btn,
-.delete-btn {
-  background: none;
-  border: 1px solid #e1e5e9;
-  padding: 8px 12px;
-  margin: 0 4px;
-  border-radius: 6px;
+/* Icon buttons identical to Residents’ table variant */
+.expenses-table .icon-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #eef0f4;
+  background: #ffffff;
+  color: #4b5563;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 16px;
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
 }
-
-.edit-btn:hover {
-  background: #e3f2fd;
-  border-color: #1976d2;
+.expenses-table .icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  border-color: rgba(102,126,234,.35);
+  color: #4f46e5;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
 }
-
-.delete-btn:hover {
-  background: #ffebee;
-  border-color: #d32f2f;
+.expenses-table .icon-btn:active { transform: translateY(0); }
+.expenses-table .icon-btn.danger:hover {
+  border-color: rgba(239,68,68,.35);
+  color: #dc2626;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+}
+.expenses-table .icon-btn:disabled,
+.expenses-table .icon-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Summary */
@@ -250,6 +322,95 @@
   font-size: 16px;
 }
 .allocate-btn:hover { background: #f3e8ff; border-color: #7e57c2; }
+
+/* Dropdown styles */
+.framer-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.framer-dropdown-list {
+  margin: 0;
+  padding: 0;
+}
+.framer-dropdown-item:hover,
+.framer-dropdown-item:focus {
+  background: #f3f4fa;
+  color: #4f46e5;
+}
+
+/* Remove one border from filter-select and date picker, leaving one */
+.filter-select,
+input[type="month"].filter-select {
+  border: 1px solid #e1e5e9 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+}
+
+.filter-select::after,
+input[type="month"].filter-select::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Match dropdown menu style to app-wide dropdowns */
+.framer-dropdown .dropdown-menu {
+  min-width: 180px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(102,126,234,0.10);
+  background: #fff;
+  padding: 0;
+  margin-top: 6px;
+  z-index: 20;
+  overflow: hidden;
+}
+
+/* Animate/slide highlight for dropdown-option */
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.dropdown-option::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transform: scaleY(0);
+  transition: opacity 0.18s, transform 0.18s;
+  border-radius: 2px;
+}
+.dropdown-option:hover:not(.disabled),
+.dropdown-option.selected {
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  color: #667eea;
+  padding-left: 22px;
+}
+.dropdown-option:hover:not(.disabled)::before,
+.dropdown-option.selected::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+.dropdown-option:active:not(.disabled) {
+  background: #f0f4ff;
+  transform: scale(0.98);
+}
 
 /* Responsive */
 @media (max-width: 1024px) {

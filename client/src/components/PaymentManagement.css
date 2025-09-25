@@ -1,8 +1,8 @@
 /* Payment Management Container */
 .payment-management-container {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding: 20px;
+  background: transparent;  /* ensure alignment with shell */
+  padding: 0;               /* remove duplicate page padding */
 }
 
 /* Header Section */
@@ -61,67 +61,245 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  gap: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  gap: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(102, 126, 234, 0.08);
 }
 
 .search-filters {
   display: flex;
-  gap: 15px;
+  gap: 16px;
   flex: 1;
+  align-items: center;
 }
 
 .search-input {
   flex: 1;
   max-width: 400px;
-  padding: 12px 16px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 12px 18px;
+  border: none; /* Removed border to match filter dropdown */
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  color: #4a5568;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* Add inner border effect to search input */
+.search-input::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: 11px;
+  pointer-events: none;
+  transition: border-color 0.25s ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+  background: #ffffff;
 }
 
-.filter-select {
-  padding: 12px 16px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  background: white;
-  font-size: 16px;
+.search-input:focus::after {
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.search-input:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.search-input:hover::after {
+  border-color: rgba(102, 126, 234, 0.25);
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+/* Enhanced Filter Dropdown Trigger - Borderless Design */
+.filter-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border: none; /* Removed outer border */
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4a5568;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 160px;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.filter-dropdown-trigger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+/* Inner border simulation */
+.filter-dropdown-trigger::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: 11px;
+  pointer-events: none;
+  transition: border-color 0.25s ease;
+}
+
+.filter-dropdown-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #667eea;
+}
+
+.filter-dropdown-trigger:hover::before {
+  opacity: 0.03;
+}
+
+.filter-dropdown-trigger:hover::after {
+  border-color: rgba(102, 126, 234, 0.25);
+}
+
+.filter-dropdown-trigger:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.filter-dropdown-trigger svg {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.7;
+  transform: rotate(0deg);
+}
+
+.filter-dropdown-trigger:hover svg {
+  opacity: 1;
+  color: #667eea;
+  transform: rotate(180deg); /* Arrow animation on hover */
+}
+
+/* Enhanced Filter Dropdown Container */
+.filter-dropdown {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.filter-dropdown .dropdown-wrapper {
+  z-index: 100;
+}
+
+/* Update existing filter-select to match borderless design */
+.filter-select {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 160px;
+  color: #4a5568;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.filter-select::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: 11px;
+  pointer-events: none;
+  transition: border-color 0.25s ease;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
 }
 
+.filter-select:focus::after {
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.filter-select:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.filter-select:hover::after {
+  border-color: rgba(102, 126, 234, 0.25);
+}
+
+/* Enhanced Create Button */
 .create-bulk-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.create-bulk-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
 }
 
 .create-bulk-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+.create-bulk-btn:hover::before {
+  left: 100%;
+}
+
+.create-bulk-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
 
 /* Error Message */
@@ -217,6 +395,19 @@
 .payment-table tr:last-child td {
   border-bottom: none;
 }
+
+/* Prevent header row from receiving hover styles (payments table) */
+.payment-table thead tr { 
+  pointer-events: none; 
+}
+.payment-table thead th { 
+  cursor: default; 
+}
+.payment-table thead tr:hover { 
+  background-color: transparent !important; 
+}
+
+/* Keep body rows hoverable (existing rule may target all tr) */
 
 /* Table Cell Styles */
 .resident-cell {
@@ -743,3 +934,195 @@
     margin: 15px 20px;
   }
 }
+
+/* Payments table — mirror Residents card rows */
+.payment-table-container,
+.payments-table-wrap {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  padding: 8px 0 !important; /* room for row shadows */
+}
+
+.payment-table.payments-table {
+  border-collapse: separate !important;
+  border-spacing: 0 10px !important; /* gap between rows */
+  background: transparent !important;
+  font-size: 14px;
+}
+
+.payment-table.payments-table thead th {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 8px 12px !important;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Row “cards” */
+.payment-table.payments-table tbody tr {
+  background: #fff !important;
+  box-shadow: 0 8px 18px rgba(17,24,39,0.06) !important;
+  transition: transform 160ms ease, box-shadow 200ms ease !important;
+}
+.payment-table.payments-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17,24,39,0.10) !important;
+  background: #fff;
+}
+
+/* Compact cells + soft vertical separators */
+.payment-table.payments-table tbody td {
+  padding: 14px 16px !important;
+  border: 0 !important;
+  vertical-align: middle;
+  position: relative;
+  background: transparent !important;
+}
+.payment-table.payments-table tbody td + td {
+  box-shadow: inset 1px 0 0 #f3f4f6;
+}
+
+/* Rounded corners for the row-card */
+.payment-table.payments-table tbody td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  box-shadow: none !important;
+}
+.payment-table.payments-table tbody td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Remove blue “info” bar from ResidentForm.css on names inside payment table */
+.payment-table.payments-table .resident-info {
+  background: transparent !important;
+  border-left: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Kill any stray markers/dots */
+.payment-table.payments-table tbody tr::before,
+.payment-table.payments-table tbody td:first-child::before,
+.payment-table.payments-table ::marker {
+  content: none !important;
+}
+
+/* Actions: right-aligned compact row like Residents */
+.payment-table.payments-table .actions-cell {
+  display: flex !important;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Icon buttons to match Residents’ .icon-btn */
+.pm-icon-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+  margin: 0;
+}
+.pm-icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  border-color: rgba(102,126,234,.35);
+  color: #4f46e5;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+}
+.pm-icon-btn svg { width: 16px; height: 16px; }
+
+/* Keep the colored approve/reject variant */
+.pm-icon-btn.colored.success {
+  background: #10b981; color: #fff; border-color: #10b981;
+}
+.pm-icon-btn.colored.danger {
+  background: #ef4444; color: #fff; border-color: #ef4444;
+}
+.pm-icon-btn.colored.success:hover { box-shadow: 0 10px 24px rgba(16,185,129,0.35); }
+.pm-icon-btn.colored.danger:hover { box-shadow: 0 10px 24px rgba(239,68,68,0.35); }
+
+/* Apartment chip to match Residents */
+.payment-table.payments-table .apt-chip {
+  background: rgba(59,130,246,0.10);
+  color: #2563eb;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Framer dropdown styles (mirrored from Expenses) */
+.framer-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.dropdown-option::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transform: scaleY(0);
+  transition: opacity 0.18s, transform 0.18s;
+  border-radius: 2px;
+}
+.dropdown-option:hover:not(.disabled),
+.dropdown-option.selected {
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  color: #667eea;
+  padding-left: 22px;
+}
+.dropdown-option:hover:not(.disabled)::before,
+.dropdown-option.selected::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+.dropdown-option:active:not(.disabled) {
+  background: #f0f4ff;
+  transform: scale(0.98);
+}
+

@@ -251,158 +251,156 @@ const TenantDashboard = ({ onNavigate }) => {
   }
 
   return (
-    <div className="tenant-dashboard">
-      <div className="td-sheet">
-        {error && <div className="td-error">❌ {error}</div>}
+    <div className="universal-page-container">
+      {error && <div className="td-error">❌ {error}</div>}
 
-        {/* Stat tiles */}
-        <div className="td-tiles">
-          {/* Total Assigned */}
-          <div className="td-tile clickable" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
-            <div className="td-tile-head">
-              <div className="td-tile-icon" aria-hidden>
-                {/* Banknote (outlined, clean) */}
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="6" width="20" height="12" rx="2" />
-                  <circle cx="12" cy="12" r="2.25" />
-                  <path d="M6 12h.01M18 12h.01" />
-                </svg>
-              </div>
-              <div className="td-metric">
-                <span className="td-number">{MAD(totalAssigned)}</span>
-                <span className="td-label">Total Assigned</span>
-              </div>
+      {/* Stat tiles */}
+      <div className="td-tiles">
+        {/* Total Assigned */}
+        <div className="td-tile clickable" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Banknote (outlined, clean) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2.25" />
+                <path d="M6 12h.01M18 12h.01" />
+              </svg>
             </div>
-          </div>
-
-          {/* Amount Paid */}
-          <div className="td-tile clickable" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
-            <div className="td-tile-head">
-              <div className="td-tile-icon" aria-hidden>
-                {/* Check Circle (outlined) */}
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-              </div>
-              <div className="td-metric">
-                <span className="td-number">{MAD(totalPaid)}</span>
-                <span className="td-label">Amount Paid</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Outstanding */}
-          <div className="td-tile clickable warning" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
-            <div className="td-tile-head">
-              <div className="td-tile-icon" aria-hidden>
-                {/* Alert Circle (outlined) */}
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v5" />
-                  <path d="M12 16h.01" />
-                </svg>
-              </div>
-              <div className="td-metric">
-                <span className="td-number">{MAD(outstanding)}</span>
-                <span className="td-label">Outstanding</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Next Due Date */}
-          <div className="td-tile">
-            <div className="td-tile-head">
-              <div className="td-tile-icon" aria-hidden>
-                {/* Calendar (outlined) */}
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <path d="M16 2v4M8 2v4M3 10h18" />
-                </svg>
-              </div>
-              <div className="td-metric">
-                <span className="td-number">{nextDue ? fmtDate(nextDue) : '-'}</span>
-                <span className="td-label">Next Due Date</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Last Payment */}
-          <div className="td-tile">
-            <div className="td-tile-head">
-              <div className="td-tile-icon" aria-hidden>
-                {/* Clock (outlined) */}
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 7v5l3 2" />
-                </svg>
-              </div>
-              <div className="td-metric">
-                <span className="td-number">{lastPaymentDate ? fmtDate(lastPaymentDate) : '-'}</span>
-                <span className="td-label">Last Payment</span>
-              </div>
+            <div className="td-metric">
+              <span className="td-number">{MAD(totalAssigned)}</span>
+              <span className="td-label">Total Assigned</span>
             </div>
           </div>
         </div>
- 
-        {/* Charts */}
-        <div className="td-charts">
-           <div className="td-card hoverable">
-             <div className="td-card-header">
-               <h3>Paid vs Outstanding (last 6 months)</h3>
-             </div>
-             <div className="td-chart">
-               <Line data={lineData} options={baseOptions} />
-             </div>
-           </div>
 
-           <div className="td-card hoverable">
-             <div className="td-card-header">
-               <h3>Assigned per Month</h3>
-             </div>
-             <div className="td-chart">
-               <Bar data={barData} options={baseOptions} />
-             </div>
-           </div>
+        {/* Amount Paid */}
+        <div className="td-tile clickable" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Check Circle (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{MAD(totalPaid)}</span>
+              <span className="td-label">Amount Paid</span>
+            </div>
+          </div>
         </div>
+
+        {/* Outstanding */}
+        <div className="td-tile clickable warning" onClick={() => onNavigate?.('payments')} title="Go to My Payments">
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Alert Circle (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v5" />
+                <path d="M12 16h.01" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{MAD(outstanding)}</span>
+              <span className="td-label">Outstanding</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Next Due Date */}
+        <div className="td-tile">
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Calendar (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{nextDue ? fmtDate(nextDue) : '-'}</span>
+              <span className="td-label">Next Due Date</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Last Payment */}
+        <div className="td-tile">
+          <div className="td-tile-head">
+            <div className="td-tile-icon" aria-hidden>
+              {/* Clock (outlined) */}
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </div>
+            <div className="td-metric">
+              <span className="td-number">{lastPaymentDate ? fmtDate(lastPaymentDate) : '-'}</span>
+              <span className="td-label">Last Payment</span>
+            </div>
+          </div>
+        </div>
+      </div>
  
-        {/* Latest payments table */}
-        <div className="td-card hoverable">
+      {/* Charts */}
+      <div className="td-charts">
+         <div className="td-card hoverable">
            <div className="td-card-header">
-             <h3>Latest Payments</h3>
-             <button className="td-link" onClick={() => onNavigate?.('payments')}>View all →</button>
+             <h3>Paid vs Outstanding (last 6 months)</h3>
            </div>
-           <div className="td-table-wrap">
-             <table className="td-table">
-               <thead>
-                 <tr>
-                   <th>Description</th>
-                   <th>Period</th>
-                   <th>Amount</th>
-                   <th>Due Date</th>
-                   <th>Status</th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {recentPayments.length === 0 ? (
-                   <tr><td colSpan="5" style={{ textAlign: 'center', color: '#666' }}>No payments yet</td></tr>
-                 ) : recentPayments.map((p) => (
-                   <tr key={p._id}>
-                     <td className="td-desc">{p.description || '-'}</td>
-                     <td>{p.period || '-'}</td>
-                     <td className="td-amount">{MAD(p.amount)}</td>
-                     <td>{fmtDate(p.dueDate)}</td>
-                     <td>
-                       <span className={`td-status ${p.status || 'pending'}`}>{p.status || 'pending'}</span>
-                     </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
+           <div className="td-chart">
+             <Line data={lineData} options={baseOptions} />
+           </div>
+         </div>
+
+         <div className="td-card hoverable">
+           <div className="td-card-header">
+             <h3>Assigned per Month</h3>
+           </div>
+           <div className="td-chart">
+             <Bar data={barData} options={baseOptions} />
            </div>
          </div>
       </div>
-     </div>
+ 
+      {/* Latest payments table */}
+      <div className="td-card hoverable">
+         <div className="td-card-header">
+           <h3>Latest Payments</h3>
+           <button className="td-link" onClick={() => onNavigate?.('payments')}>View all →</button>
+         </div>
+         <div className="td-table-wrap">
+           <table className="td-table">
+             <thead>
+               <tr>
+                 <th>Description</th>
+                 <th>Period</th>
+                 <th>Amount</th>
+                 <th>Due Date</th>
+                 <th>Status</th>
+               </tr>
+             </thead>
+             <tbody>
+               {recentPayments.length === 0 ? (
+                 <tr><td colSpan="5" style={{ textAlign: 'center', color: '#666' }}>No payments yet</td></tr>
+               ) : recentPayments.map((p) => (
+                 <tr key={p._id}>
+                   <td className="td-desc">{p.description || '-'}</td>
+                   <td>{p.period || '-'}</td>
+                   <td className="td-amount">{MAD(p.amount)}</td>
+                   <td>{fmtDate(p.dueDate)}</td>
+                   <td>
+                     <span className={`td-status ${p.status || 'pending'}`}>{p.status || 'pending'}</span>
+                   </td>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         </div>
+       </div>
+    </div>
    );
 };
 

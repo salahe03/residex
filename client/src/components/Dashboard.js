@@ -3,8 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import ResidentManagement from './ResidentManagement';
 import PaymentManagement from './PaymentManagement';
 import Expenses from './Expenses';
+import TenantDashboard from './TenantDashboard';
 import './Dashboard.css';
-import TenantDashboard from './TenantDashboard'; // ADD THIS
+import { FiHome, FiUsers, FiDollarSign, FiBarChart2, FiFileText } from 'react-icons/fi';
 
 const Dashboard = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -18,17 +19,37 @@ const Dashboard = () => {
 
   const handleNavClick = (view) => {
     setCurrentView(view);
-    setSidebarOpen(false); // Close mobile menu
+    setSidebarOpen(false);
+  };
+
+  const getPageTitle = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return 'Overview';
+      case 'resident-management':
+        return 'Residents';
+      case 'payments':
+        return isAdmin ? 'Payments' : 'My Payments';
+      case 'expenses':
+        return 'Expenses';
+      case 'documents':
+        return 'Documents';
+      default:
+        return 'Overview';
+    }
   };
 
   const renderContent = () => {
+    let content;
     switch (currentView) {
       case 'resident-management':
-        return <ResidentManagement />;
+        content = <ResidentManagement />;
+        break;
       case 'payments':
-        return <PaymentManagement />;
+        content = <PaymentManagement />;
+        break;
       case 'expenses':
-        return isAdmin ? (
+        content = isAdmin ? (
           <Expenses />
         ) : (
           <div className="dashboard-content">
@@ -38,9 +59,9 @@ const Dashboard = () => {
             </div>
           </div>
         );
+        break;
       default:
-        // Show Tenant dashboard for non-admins; keep current welcome for admins
-        return isAdmin ? (
+        content = isAdmin ? (
           <div className="dashboard-content">
             <div className="welcome-card">
               <h2>Welcome to Residex</h2>
@@ -57,126 +78,94 @@ const Dashboard = () => {
             </div>
           </div>
         ) : (
-          <TenantDashboard onNavigate={(v) => setCurrentView(v)} /> // ADD THIS
+          <TenantDashboard onNavigate={(v) => setCurrentView(v)} />
         );
+        break;
     }
+
+    // Wrap ALL content (admin and tenant) in the content shell with title
+    return (
+      <section className="content-shell">
+        <div className="content-shell-header">
+          <h1 className="content-title">{getPageTitle()}</h1>
+        </div>
+        <div className="content-shell-body">
+          {content}
+        </div>
+      </section>
+    );
   };
+
+  // NEW: unified nav config (replaces emoji buttons + "Main" label)
+  const navItems = [
+    { key: 'dashboard', label: 'Overview', icon: <FiHome /> },
+    ...(isAdmin ? [{ key: 'resident-management', label: 'Residents', icon: <FiUsers /> }] : []),
+    { key: 'payments', label: isAdmin ? 'Payments' : 'My Payments', icon: <FiDollarSign /> },
+    ...(isAdmin ? [{ key: 'expenses', label: 'Expenses', icon: <FiBarChart2 /> }] : []),
+    { key: 'documents', label: 'Documents', icon: <FiFileText /> }
+  ];
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-        <div className="sidebar-header">
-          <h2>Residex</h2>
-          <button 
-            className="sidebar-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            ×
-          </button>
-        </div>
-
-        <nav className="sidebar-nav">
-          <ul>
-            <li>
-              <button 
-                className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
-                onClick={() => handleNavClick('dashboard')}
-              >
-                <span className="nav-icon">🏠</span>
-                Dashboard
-              </button>
-            </li>
-            
-            {isAdmin && (
-              <li>
-                <button 
-                  className={`nav-item ${currentView === 'resident-management' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('resident-management')}
-                >
-                  <span className="nav-icon">👥</span>
-                  Resident Management
-                </button>
-              </li>
-            )}
-            
-            <li>
-              <button 
-                className={`nav-item ${currentView === 'payments' ? 'active' : ''}`}
-                onClick={() => handleNavClick('payments')}
-              >
-                <span className="nav-icon">💰</span>
-                {isAdmin ? 'Payment Management' : 'My Payments'}
-              </button>
-            </li>
-            
-            {isAdmin && (
-              <li>
-                <button
-                  className={`nav-item ${currentView === 'expenses' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('expenses')}
-                >
-                  <span className="nav-icon">📊</span>
-                  Expenses
-                </button>
-              </li>
-            )}
-            
-            <li>
-              <button 
-                className={`nav-item ${currentView === 'documents' ? 'active' : ''}`}
-                onClick={() => handleNavClick('documents')}
-              >
-                <span className="nav-icon">📄</span>
-                Documents
-              </button>
-            </li>
-          </ul>
-        </nav>
-        
-        <div className="sidebar-footer">
-          <div className="user-profile">
-            <div className="user-avatar">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="user-info">
-              <p className="user-name">{user.name}</p>
-              <p className="user-role">{user.role}</p>
-            </div>
+      <div className="merged-layout">
+        <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+          <div className="sidebar-header">
+            <h2>Residex</h2>
+            <button 
+              className="sidebar-close"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              ×
+            </button>
           </div>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
+
+            {/* NEW SIDEBAR NAV */}
+            <nav className="sidebar-nav">
+              <ul className="nav-group">
+                {navItems.map(item => {
+                  const active = currentView === item.key;
+                  return (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        className={`nav-item${active ? ' active' : ''}`}
+                        onClick={() => handleNavClick(item.key)}
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        <span className="nav-icon">{item.icon}</span>
+                        <span className="nav-label">{item.label}</span>
+                        <span className="nav-active-glow" aria-hidden="true" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+          <div className="sidebar-footer">
+  <div className="sidebar-user">
+    <div className="user-avatar">
+      {(user?.name && user.name[0]) ? user.name[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U')}
+    </div>
+    <div className="user-meta">
+      <div className="user-name">{user?.name || 'User'}</div>
+      <div className="user-role">{isAdmin ? 'Admin' : 'Tenant'}</div>
+    </div>
+  </div>
+  <button className="logout-btn" onClick={handleLogout}>
+    Logout
+  </button>
+</div>
+        </aside>
+
+        <div className="main-area">
+          <main className="page-content page-fade">
+            {renderContent()}
+          </main>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content */}
-      <main className="main-content page-fade">
-        {/* Top Header */}
-        <header className="top-header">
-          <button 
-            className="mobile-menu-btn"
-            onClick={() => setSidebarOpen(true)}
-          >
-            ☰
-          </button>
-          
-          <div className="page-title">
-            {currentView === 'dashboard' && 'Dashboard'}
-            {currentView === 'resident-management' && 'Resident Management'}
-            {currentView === 'payments' && (isAdmin ? 'Payment Management' : 'My Payments')}
-            {currentView === 'expenses' && 'Expenses'}
-            {currentView === 'documents' && 'Documents'}
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <div className="page-content">
-          {renderContent()}
-        </div>
-      </main>
-
-      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
           className="sidebar-overlay"
